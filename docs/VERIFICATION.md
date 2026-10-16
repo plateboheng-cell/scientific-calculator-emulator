@@ -1,4 +1,4 @@
-# v0.1.0 验证记录
+# v0.1.1 验证记录
 
 日期：2026-10-16（Asia/Shanghai）。环境：Windows 11 x64，Node.js 24.21.0，Electron 44.8.0，Vite 8.3.4，mathjs 15.2.0。
 
