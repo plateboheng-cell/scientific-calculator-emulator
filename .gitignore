@@ -1,0 +1,10 @@
+node_modules/
+dist/
+release/
+.verification/
+docs/reference-*
+*.log
+*.lnk
+CNX-Calculator-Source.zip
+.env*
+!.env.example
