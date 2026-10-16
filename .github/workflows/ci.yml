@@ -62,8 +62,8 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: CNX Calculator v${{ steps.version.outputs.version }}
           body: |
-            Windows x64 离线科学计算器，十种模式，支持键盘及鼠标，MIT 开源。
-            参照 fx-991CN X 独立实现的早期版本；完整兼容范围和差异见 README。
+            Windows x64 离线科学计算器，十种模式，支持中文、英文、键盘及鼠标，MIT 开源。
+            功能与操作说明见 README。
             下载便携 EXE 双击运行，或解压整个 ZIP 后运行 CNX Calculator.exe。
             SHA256SUMS.txt 提供文件校验值。
           files: |
