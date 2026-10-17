@@ -117,6 +117,21 @@ const english = {
   '标准重力加速度': 'Standard gravity', '标准大气压': 'Standard atmosphere',
 };
 
+Object.assign(english,{
+  '公式输入':'Formula entry','数据输入':'Data entry',
+  '按分数、根号、乘方等按键插入数学模板，在公式空位中填写。方向键移动公式光标，Tab 切换空位；Enter 进入下一项，最后一项 Enter 计算，Ctrl+Enter 可直接计算。':'Use the fraction, root and power keys to insert mathematical templates. Fill the empty positions directly. Arrows move the formula cursor, Tab moves between positions, and Enter moves to the next parameter or calculates at the last one. Ctrl+Enter calculates directly.',
+  '矩阵、向量、方程和统计数据按单元格填写。所有空位起始为空，返回编辑会保留本人输入的内容。':'Enter matrices, vectors, equations and statistics in their cells. Positions start empty; returning to edit preserves your entries.',
+  '请填写公式空位':'Fill all formula positions','不支持的数学符号':'Unsupported mathematical notation','请填写上下限':'Enter the lower and upper limits',
+  '请填写完整数据行':'Complete the data row','矩阵行数':'Matrix rows','矩阵列数':'Matrix columns','向量维数':'Vector dimension',
+  '行列式':'Determinant','逆矩阵':'Inverse matrix','转置矩阵':'Transpose matrix','简化行阶梯形':'Reduced row echelon form','单位矩阵':'Identity matrix','阶数':'Order',
+  '数量积':'Dot product','向量积':'Cross product','向量的模':'Vector magnitude','向量夹角':'Angle between vectors','单位向量':'Unit vector',
+  '求解方程':'Solve equation','代入计算':'Substitute variables','最大公约数':'Greatest common divisor','最小公倍数':'Least common multiple',
+  '整数部分':'Integer part','向下取整':'Floor','四舍五入':'Round','绝对值':'Absolute value','阶乘':'Factorial','排列':'Permutation','组合':'Combination','随机数':'Random number',
+  '共轭复数':'Complex conjugate','复数的模':'Complex magnitude','辐角':'Argument','实部':'Real part','虚部':'Imaginary part','极坐标输入':'Polar input',
+  '直角坐标转极坐标':'Cartesian to polar','极坐标转直角坐标':'Polar to Cartesian','按度输入':'Degrees','按弧度输入':'Radians','按梯度输入':'Gradians',
+  '微分':'Derivative','求和':'Summation','求积':'Product','频数':'Frequency','＋ 添加行':'+ Add row','− 删除末行':'− Remove last row'
+  ,'角度':'Angle'
+});
 const phrases = Object.keys(english).filter(key => /\p{Script=Han}/u.test(key)).sort((a,b) => b.length-a.length);
 const phrasePattern = new RegExp(phrases.map(key => key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'gu');
 
@@ -133,6 +148,8 @@ export function translate(source, language) {
     .replace(/(\d+) 次/g,'Degree $1')
     .replace(/第 (\d+) 行/g,'Row $1')
     .replace(/(\d+) 行/g,'$1 rows')
+    .replace(/(\d+) 列/g,'$1 columns')
+    .replace(/(\d+) 维/g,'$1 dimensions')
     .replace(/定义 (Mat[A-D])（最大 4×4）/g,'Define $1 (up to 4×4)')
     .replace(/定义 (Vct[A-D])（2 或 3 维）/g,'Define $1 (2D or 3D)');
   return translated.replace(phrasePattern,match=>english[match]);
