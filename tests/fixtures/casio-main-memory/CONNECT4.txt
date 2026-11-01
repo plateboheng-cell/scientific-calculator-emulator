@@ -1,0 +1,166 @@
+'ProgramMode:RUN
+Locate 7,1,"POWER 4"
+Locate 1,7,"_@E74D__@E761__@E764__@E765_ _@E762__@E779_ _@E761__@E762__@E770__@E770__@E762__@E764_"
+
+Locate 3,3,"Play _#E69B_ (EXE)"
+Locate 3,5,"Use:EXE,_#E5E8_,_#E5E9_"
+
+Do
+Getkey->K
+LpWhile K<>0
+
+Do
+Getkey->K
+LpWhile K<>31
+
+Do
+Getkey->K
+LpWhile K<>0
+
+0->T
+
+11->X
+1->P
+
+{6,21}->Dim Mat A
+{6,21}->Dim Mat B
+{6,21}->Dim Mat T
+
+ClrText
+Locate 1,1,"_#E5E8_"
+Locate 21,1,"_#E5E9_"
+Locate 11,1,"_#E6A3_"
+Locate 11,7,"|"
+
+While 1=1
+
+Do
+Getkey->K
+LpWhile K=0
+
+K=47=>Goto 5
+
+If (K=27 Or K=38) And Mat T[1,X]=0
+Then 6->I
+While Mat T[I,X]<>0
+I-1->I
+WhileEnd
+Locate X,I+1," "
+IfEnd
+
+K=27=>Locate X,1," "
+K=27 And X<21=>X+1->X
+
+K=38=>Locate X,1," "
+K=38 And X>1=>X-1->X
+
+If (K=27 Or K=38) And Mat T[1,X]=0
+Then 6->I
+While Mat T[I,X]<>0
+I-1->I
+WhileEnd
+Locate X,I+1,"|"
+
+IfEnd
+
+Lbl 6
+
+X<>0=>Locate 1,1,"_#E5E8_"
+X<>21=>Locate 21,1,"_#E5E9_"
+
+If Mat T[1,X]<>0
+Then P=2=>Locate X,1,"_#E5B8_"
+P=1=>Locate X,1,"="
+K=31 Or K=37=>Locate X,1,"Char!"
+Goto 4
+IfEnd
+
+P=1=>Locate X,1,"_#E6A3_"
+P=2=>Locate X,1,"_#E6A4_"
+
+If K=31 Or K=37
+Then 
+1->Y
+
+Locate X,Y," "
+
+For 1->Y To 6
+Mat T[Y,X]<>0=>Goto 1
+
+P=1=>Locate X,Y+1,"_#E6A3_"
+P=2=>Locate X,Y+1,"_#E6A4_"
+Y<>1=>Locate X,Y," "
+Next
+
+Goto 1
+|->A
+//->B
+\->C
+-->D
+Lbl 1
+Mat T[Y,X]<>0=>Y-1->Y
+
+P->Mat T[Y,X]
+T+1->T
+
+
+0->A
+0->B
+0->C
+0->D
+
+For (-)3->I To 3
+
+Y+I>=1 And Y+I<=6 And X+I>=1 And X+I<=21=>Mat T[Y+I,X+I]=P=>C+1->C
+Y+I>=1 And Y+I<=6 And X+I>=1 And X+I<=21=>Mat T[Y+I,X+I]<>P=>0->C
+
+Y-I>=1 And Y-I<=6 And X+I>=1 And X+I<=21=>Mat T[Y-I,X+I]=P=>B+1->B
+Y-I>=1 And Y-I<=6 And X+I>=1 And X+I<=21=>Mat T[Y-I,X+I]<>P=>0->B
+
+Y+I>=1 And Y+I<=6=>Mat T[Y+I,X]=P=>A+1->A
+Y+I>=1 And Y+I<=6=>Mat T[Y+I,X]<>P=>0->A
+
+X+I>=1 And X+I<=21=>Mat T[Y,X+I]=P=>D+1->D
+X+I>=1 And X+I<=21=>Mat T[Y,X+I]<>P=>0->D
+
+If A=4 Or B=4 Or C=4 Or D=4
+Then 
+Goto 3
+IfEnd
+
+Next
+
+Lbl 2
+
+MOD(P,2)+1->P
+
+Y<>1=>Locate X,Y,"|"
+
+IfEnd
+
+Lbl 4
+
+Do
+Getkey->K
+LpWhile K<>0
+
+If Mat T[1,X]<>0
+Then P=2=>Locate X,1,"_#E5B8_"
+P=1=>Locate X,1,"="
+Else 
+P=1=>Locate X,1,"_#E6A3_"
+P=2=>Locate X,1,"_#E6A4_"
+IfEnd
+
+T=21*6=>T=(-)1
+T=21*6=>Goto 3
+
+WhileEnd
+
+Lbl 3
+
+Locate 1,1,"                     "
+T<>(-)1 And P=1=>Locate 1,1,"_#E6A3_ Won"
+T<>(-)1 And P=2=>Locate 1,1,"_#E6A4_ Won"
+T=(-)1=>Locate 1,1,"WowChar! You acually tiedChar!"
+Lbl 5

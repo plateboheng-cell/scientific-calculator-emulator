@@ -1,84 +1,78 @@
-# CNX Calculator
+# scientific calculator simulator
 
-面向 Windows 的离线科学计算器，参照 **Casio fx-991CN X** 的十种模式、中英文菜单与实体按键布局设计。打开即用，支持键盘与鼠标，运行时无需联网、账号或 API Key。源码采用 MIT 许可证。
+**Offline, multi-model scientific calculator for Windows**
 
-![计算器界面](docs/calculator.png)
+**English** | [简体中文](README.zh-CN.md)
 
-## 下载与启动
+scientific calculator simulator is an independent JavaScript/Electron application. Model-specific keyboards, menus and limits share one mathematical engine. It supports English and Simplified Chinese, mouse and keyboard input, and runs without accounts, API keys or an internet connection.
 
-从 [Releases](https://github.com/plateboheng-cell/fx-991cnx/releases) 下载 `CNX-Calculator-0.3.0-Windows-x64.exe`，双击启动。首次解包需要几秒。也可下载 ZIP，解压整个目录后运行 `CNX Calculator.exe`，请保留同目录的其他文件。
+No calculator firmware, manufacturer logos or proprietary artwork are included. This project is not affiliated with or certified by Casio or Texas Instruments.
 
-平台：Windows 10/11 x64。分数、根式与公式字体随包提供；完全离线。应用数据存放在用户目录的 Electron 应用数据中，保存角度设置、历史、实数变量、矩阵、向量和统计数据。
+## Models and status
 
-界面语言可在 **F11 → 语言 / Language** 或底部 **中文 / English** 按钮中选择；**F12** 快速切换，关闭后保留选择。功能参数首次打开均为空白，返回结果编辑时保留用户填写的数据；退出功能后，菜单仍选中刚才使用的项目。
-
-## 十种模式
-
-按 **F4** 或 **Home** 打开主菜单，使用数字键或方向键选择，Enter 确认。
-
-| 按键 | 模式 | 已实现 |
+| Model | Status | Implemented scope |
 | --- | --- | --- |
-| 1 | 计算 | 四则、分数、幂根式、对数、三角与反三角、双曲与反双曲、阶乘、排列组合、随机数、GCD/LCM、取整、坐标转换、度分秒、Σ/Π、数值积分/微分、CALC、SOLVE |
-| 2 | 复数 | 四则、幂、共轭、模、辐角、实虚部、极坐标输入/输出 |
-| 3 | 基数 | 二/八/十/十六进制，32 位有符号整数、AND/OR/XOR/XNOR/NOT/NEG |
-| 4 | 矩阵 | MatA–MatD，最大 4×4，加减乘、逆矩阵、行列式、转置、单位矩阵、RREF、MatAns |
-| 5 | 向量 | VctA–VctD，2/3 维，加减、数乘、点积、叉积、模、夹角、单位向量、VctAns |
-| 6 | 统计 | 频数、均值、总体/样本标准差、平方和、极值、中位数、四分位数；线性/二次/对数/两种指数/幂/反比例回归与预测 |
-| 7 | 表格 | f(x) 与 g(x)，自定义起点/终点/正负步长，最多 45 行 |
-| 8 | 方程/函数 | 2–4 元线性方程组、2–4 次多项式及复根、一般实数方程数值求解 |
-| 9 | 不等式 | 2–4 次，> / < / ≥ / ≤，区间、单点、全体实数和空集 |
-| 0 | 比例 | A:B=X:D 与 A:B=C:X |
+| fx-991CN X | Available | Ten modes, SHIFT/ALPHA, CALC/SOLVE, memory M and CODATA 2010 constants |
+| fx-991CN CW | Experimental | 48-key layout, paged HOME, Catalog/Tools/Format, f/g registration, 45/30-row tables and 47 CODATA 2018 constants |
+| fx-999CN CW | Experimental | First-generation white CW layout, twelve HOME apps, seven distributions, 45-entry discrete lists and an A1:E45 spreadsheet |
+| TI-36X Pro | Experimental | Multi-tap keys, eight variables, six-row MODE, 20 constants, seven distributions, Auto/Ask-x tables, 40 conversion directions, op/setop, mixed-number entry and software contrast |
+| fx-CG50 | Experimental | Nineteen application workflows; twenty graph slots with multiple relation types, analysis/sketch/modify and graph memories; six statistical List Files, spreadsheets, recursion, programs, finance, geometry and 3D |
+| fx-991EX | Experimental | Independent English keyboard, twelve apps with 1–9/A/B/C menu, nine variables, Calculate SOLVE, 45/30-row tables, distributions, a volatile A1:E45 spreadsheet and simulator-text QR export |
 
-另外提供 47 个 CODATA 2010 科学常数、40 个方向的单位换算、A–F/x/y/z 变量及独立存储器 M、Ans、历史重放、撤销、Fix/Sci/Norm、S⇔D 和工程计数法。
+**No model has complete hardware parity.** Available describes the existing usable implementation, not certification. Experimental models provide documented working subsets, with unfinished native menus, visual details and numerical domains. Unsupported actions report their status.
 
-## 完全用键盘操作
+See the [compatibility matrix](docs/COMPATIBILITY.md), [current usability scope](docs/USABILITY.md), [999 scope](docs/999CW.md), [TI scope](docs/TI36XPRO.md), [CG50 graph scope](docs/CG50.md) and [CG50 applications](docs/CG50_APPLICATIONS.md). These documents are English, Chinese or bilingual.
 
-| 按键 | 操作 |
-| --- | --- |
-| F1 | 完整键盘帮助 |
-| F2、F3 | SHIFT、ALPHA，随后按对应数字/按键，或 Tab 到目标按键后空格 |
-| F4 / Home | 主菜单，1–9 / 0 选择模式 |
-| F5 | 当前模式选项 / 函数目录 |
-| F6 / Shift+F6 | CALC / SOLVE |
-| F7 / F8 | 科学常数 / 单位换算 |
-| F9 / Shift+F9 | S⇔D / 带分数 |
-| F10 / F11 | 展开屏幕 / 设置 |
-| F12 | 切换中文 / 英文 |
-| Enter / = | 执行；参数页面 Enter 下一项，最后一项计算 |
-| Escape | 返回；计算页面清空算式 |
-| Shift+Delete | AC |
-| Backspace / Delete / Insert | 删除左边 / 删除右边 / 插入覆盖切换 |
-| ↑↓ / ←→ | 菜单导航、历史重放、移动光标；结果页滚动 |
-| Tab / Shift+Tab | 访问每个参数和屏幕按键 |
-| Ctrl+Z / Ctrl+C / Ctrl+V | 撤销 / 复制选中内容或结果 / 粘贴 |
-| Ctrl+Enter | 直接计算当前公式或数据 |
-| 方向键、Tab | 移动二维公式光标、切换公式空位和数据单元格 |
+## Getting started
 
-分数、根式、乘方和对数均在二维数学编辑器中输入。按 ∫ 或在 F5 目录选择定积分、微分、求和、求积，直接填写公式中的空位；上下限、函数和求值点均可用键盘或鼠标编辑，初始不填入数值。
+Build this checkout using the commands below. **The next GitHub release, v0.4.0, is being prepared from local development through 0.13.0.** Current local validation and installation evidence is recorded in [VERIFICATION.md](docs/VERIFICATION.md).
 
-矩阵、向量和方程系数按单元格填写；统计数据逐行输入，可增加行、选择回归模型和显示频数。菜单显示中文功能名称与数学符号，无需输入内部函数名称。
+- Run the Windows x64 portable EXE directly. For an unpacked build, keep the entire directory together and run `scientific calculator simulator.exe`.
+- On first launch, select a model. Use **Switch model** to return to the selector.
+- The same package detects the preferred OS interface language: Chinese locales use Simplified Chinese; other locales use English. A saved manual choice takes precedence.
+- Language is an application preference. Calculator chassis headers contain no language-edition badge.
+- Each model keeps its own history, real variables, settings and supported data. Interface language is shared. Switching clears unsubmitted input.
+- Legacy `cnx-v1` data migrates to the X profile; the old storage key remains available for rollback.
 
-![公式输入](docs/formula-display.png)
+Calculator data is stored in the local Electron user-data directory. Clearing that directory can remove saved work. Complex Ans and matrix/vector answer registers are session values. The 999 spreadsheet is volatile: switching models, power operations or restarting clears it. EX also clears its spreadsheet and statistics when leaving their applications. See the model documentation before relying on device-specific retention.
 
-![矩阵输入](docs/matrix.png)
+## Features
 
-## 与真机的兼容范围
+- Arithmetic, fractions, powers/roots, logarithms, trigonometry and angle units.
+- Complex numbers, matrices, vectors, polynomial equations, linear systems, inequalities and ratios, subject to each model's limits.
+- Frequency statistics, regression, function tables, numerical integration/differentiation and bounded sums/products.
+- Model-specific probability distributions and spreadsheets; CG50 adds six List Files, three statistical graph configurations, hypothesis tests and confidence intervals.
+- CG50 programs, finance, three-sequence recursion, eActivity, geometry, Picture Plot and sampled 3D graphs, with model-workspace JSON backup/restore.
+- Scanner-readable EX calculation-text QR export, software idle power-off, TI contrast and CG50 brightness settings.
+- Natural formula entry, editable data cells, calculation history and offline function suggestions with Tab completion.
+- Per-model settings and histories; English/Chinese switching without separate downloads.
+- A responsive model library with configuration-based calculator previews, clear model names/status and keyboard access. X/EX use revised silver-edged shells, round controls and four-column icon menus; the scrolling menu retains the previous row.
 
-**这是独立实现的 v0.3.0，尚不能宣称功能及行为与真机 100% 相同。** 未包含或调用卡西欧固件。十个模式均可操作，但以下差异必须明确：
+On X, enter an equation in **Calculate**, use **ALPHA CALC** for `=`, then **SHIFT CALC** for SOLVE. Edit variable values and select the unknown without leaving Calculate. CW/999 keep Solver in **Equation**. Fraction keys use stacked numerator/bar/denominator symbols, capture a preceding numerator, and distinguish SHIFT mixed-number input from the division operator. See [native input and layout fixes](docs/NATIVE_INPUT.md) for verified sequences and remaining differences.
 
-- 输入使用二维数学编辑器、公式槽位和数据单元格；支持分数、根式、上下标及公式光标移动。尚未逐项复刻真机所有编辑细节、循环小数输入与自然格式输出规则。
-- 菜单、数据编辑器及部分按键的参数步骤为桌面适配，并非逐帧复制。机身使用原创 CSS 与 CNX 标识，没有复制官方 Logo、照片或字体。
-- 内部使用 IEEE 754 双精度与独立数值算法；显示默认 10 位有效数字。分数/π/简单根式依据数值识别，不是通用符号代数系统。退化/病态方程、高重数或非常接近的根、振荡/奇异积分等边界未获真机一致性认证。SOLVE 只寻找初值附近的一个实根。
-- 基数使用统一 32 位二补码；真机各进制的位数限制、溢出及负数输入规则可能不同。当前加乘溢出按 32 位回绕。
-- 常数按说明书所述的 CODATA 2010 数据维护，常数项目及单位换算方向对照说明书参考单；末位截断、换算常数的真机内部精度未逐项比对。
-- 当前保存实数变量；复数变量和 MatAns/VctAns 在当前会话可用，重启后不保留。暂无真机的自动关机、屏幕对比度、工程前缀输入及完整异常位置定位。
-- 测试覆盖代表性功能和错误场景，未完成原机全部标称函数及所有输入域的逐项认证。不能把测试数量解释为真机功能数量。
+Numerical algorithms use IEEE 754 doubles. SOLVE, polynomial roots, calculus and regression outputs retain approximate-result semantics. Other fraction/radical recognition is bounded numeric recognition, not a general computer algebra system. SOLVE finds one local real root and does not guarantee all roots. Ill-conditioned inputs and unresolved features may be rejected or missed.
 
-完整范围及验收记录见 [兼容清单](docs/COMPATIBILITY.md) 和 [验证记录](docs/VERIFICATION.md)。欢迎携带真机按键序列、角度/格式设置、预期结果及实际结果提交 issue。
+CG50 Link can inspect/preserve G3M archive records and decode/encode the footer-free CP0001 RGB565 G3P picture variant. Native G3M program tokens, G3E eActivity strips, CASIO's proprietary WES QR payload/service and the EA200 native protocol are not implemented. No physical calculator or original vendor files were available for comparison; project tests and working menus do not establish complete manual or hardware parity.
 
-## 从源码运行
+## Screenshots
 
-要求 Node.js **24 LTS 或更新版本**，npm，Windows x64（构建 Windows 程序）。
+Actual local Electron windows; both interface languages are supported.
+
+![Calculator model library](docs/model-library.png)
+
+[Interface scope](docs/INTERFACE.md) · [X chassis](docs/classwiz-x.png) · [EX scope](docs/FX991EX.md) · [EX menu](docs/ex-menu.png) · [EX spreadsheet](docs/ex-spreadsheet.png)
+
+![English CW interface](docs/cw-english.png)
+
+[Model selector](docs/model-picker-en.png) · [Chinese CW](docs/cw-calculator.png) · [Tab completion](docs/completion-en.png) · [999 HOME](docs/999-home.png) · [999 distributions](docs/999-distribution.png) · [999 spreadsheet](docs/999-spreadsheet.png)
+
+![CG50 graphs and line styles](docs/cg50-analysis.png)
+
+[TI MODE](docs/ti-mode.png) · [X calculator](docs/calculator.png) · [Matrix input](docs/matrix.png)
+
+## Development and testing
+
+Use **Node.js 24 LTS** and npm. Windows 10/11 x64 is the current desktop packaging target. The initial dependency installation requires downloads; the packaged application runs offline.
 
 ```sh
 npm ci
@@ -87,16 +81,44 @@ npm run build
 npm start
 ```
 
-开发预览：`npm run dev`，访问终端给出的本机地址。打包便携 EXE：`npm run release:win`；输出位于 `release/`。仅生成解压目录：`npm run pack`。实际 Electron 窗口自动测试：`npm run test:ui`（先 build）。
+```sh
+npm run dev          # Local Vite preview
+npm run test:ui      # Build first; launches actual Electron windows
+npm run release:win  # Windows x64 portable EXE; never publishes
+npm run pack         # Windows unpacked directory
+npm run licenses    # Collect dependency notices
+```
 
-如果 Electron 二进制下载失败，使用 GitHub 官方 Electron Release 下载与锁定版本匹配的 `electron-v44.8.0-win32-x64.zip`，核对 `node_modules/electron/checksums.json` 的 SHA-256，解压至 `node_modules/electron/dist/`，在 `node_modules/electron/path.txt` 中写入 `electron.exe`。不要从不明来源替换运行时。
+Outputs are in `release/`; local test evidence is in `.verification/`. Set `CNX_ELECTRON_PATH` to run UI checks against a packaged executable.
 
-CI 在 Windows 中运行核心测试、打包和实际 Electron 界面测试。首次推送 main 后自动根据 package.json 的版本创建 GitHub Release，并上传 Windows 便携 EXE、ZIP 和 SHA-256 校验文件；发布更新时须先递增 package.json 版本。也支持推送 `v*` tag 触发。
+CI is configured for core tests/builds on Linux and core tests, actual Electron UI, packaging and packaged UI on Windows. Failed Windows steps retain logs/screenshots and report failure explicitly. CI configuration is not evidence of a successful hosted run; consult the [verification record](docs/VERIFICATION.md) for actual pass/fail/not-run counts.
 
-## 资料与许可
+## Keyboard
 
-- [Casio fx-991CN X 官方产品资料](https://www.casio.com.cn/scientific-calculators/product.FX-991CNX-BK/)；[原版用户说明书镜像](https://manuals.plus/m/9c6b41d1f8e83c52eb602fd18a154beda8144dbb748a12661712ebc2dcaac12c.pdf)。说明书仅作为功能参考，未纳入发行包。
-- [NIST CODATA 2010 常数表](https://physics.nist.gov/cuu/Constants/ArchiveASCII/allascii_2010.txt)。
-- 第三方组件：MathLive（MIT，二维数学编辑器）、Cortex Compute Engine（MIT，用于数学公式解析）、mathjs（Apache-2.0）、KaTeX（MIT，字体按组件许可证分发）、Electron（MIT 及 Chromium 第三方声明）；构建工具的依赖许可证见各包及随包声明。
+| Keys | Action |
+| --- | --- |
+| F12 | Switch interface language |
+| F4 / Home | Model menu, except CG50 F4 is its native soft key |
+| Enter | Calculate, confirm or advance a field |
+| Escape | Return or clear the current input |
+| Tab / Shift+Tab | Complete suggestions or navigate formula placeholders |
+| Ctrl+Space | Request function suggestions |
+| Ctrl+Enter | Submit a parameter form |
+| Ctrl+Z / C / V | Undo / copy / paste |
+| F1 | Help on scientific profiles; CG50 uses F7 |
 
-CASIO、ClassWiz、fx-991CN X 为其权利人的商标。本项目为独立开源软件，与卡西欧无隶属、合作或官方认证关系。项目原创源码采用 [MIT License](LICENSE)。
+Physical keys and desktop shortcuts differ by model. Open **Keyboard help** in the application for the active mapping. CW has no physical ALPHA, independent M, CALC or S⇔D key.
+
+## Contributing and documentation
+
+- [Contributing](CONTRIBUTING.md), [Code of conduct](CODE_OF_CONDUCT.md), [Security policy](SECURITY.md)
+- [Architecture](docs/ARCHITECTURE.md), [Compatibility](docs/COMPATIBILITY.md), [Roadmap](docs/ROADMAP.md), [Changelog](CHANGELOG.md)
+- [Verification](docs/VERIFICATION.md), [Third-party notices](docs/THIRD_PARTY_NOTICES.md)
+
+Please keep the English and [Simplified Chinese](README.zh-CN.md) READMEs consistent. Technical documentation may be Chinese/bilingual; its language is stated rather than implying every document has an English translation.
+
+## License and trademarks
+
+Original source is licensed under the [MIT License](LICENSE). Third-party components retain their own licenses and notices.
+
+CASIO, ClassWiz, Texas Instruments and referenced calculator model names are trademarks of their respective owners. Names identify reference products only; no manufacturer endorsement, firmware emulation or complete device compatibility is claimed.

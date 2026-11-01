@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>CG workspace isolated UI</title></head>
+<body><main class="model-cg"><section class="lcd" id="host"></section></main>
+<script type="module">
+import '/src/style.css';
+import {ModelCalculator} from '/src/engine/model-calculator.js';
+import {CGSpreadsheet} from '/src/engine/cg-workspace.js';
+import {createCGWorkspacePanel} from '/src/ui/cg-workspace-panel.js';
+const style=document.createElement('style');style.textContent='body{display:block;background:#ddd}#host{position:absolute;left:18px;top:18px;width:320px;height:177px;padding:3px 4px}';document.head.append(style);
+const host=document.getElementById('host'),calculator=new ModelCalculator('cg50');
+let panel=null,data={},graph={expressions:Array(20).fill(''),enabled:Array(20).fill(true)},back=0,openedGraph=0;
+window.fixture={show(mode,replace){panel?.destroy();if(replace)data=structuredClone(replace);panel=createCGWorkspacePanel({host,calculator,data,graph,mode,onChange:next=>data=next,onBack:()=>back++,onGraph:()=>openedGraph++});},snapshot:()=>structuredClone(data),graph:()=>structuredClone(graph),setGraph:value=>{if(Array.isArray(value))graph.expressions=value.concat(Array(20).fill('')).slice(0,20);else Object.assign(graph,structuredClone(value));},action:action=>panel.handleAction(action),key:event=>panel.handleKey(event),cell:address=>new CGSpreadsheet(calculator,data.spreadsheet).value(address),backCount:()=>back,graphCount:()=>openedGraph,destroy:()=>panel?.destroy()};
+document.addEventListener('keydown',event=>{if(panel?.handleKey(event))event.preventDefault();});
+window.fixture.show('spreadsheet');window.fixtureReady=true;
+</script></body></html>

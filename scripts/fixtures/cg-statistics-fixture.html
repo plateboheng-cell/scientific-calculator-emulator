@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>CG Statistics isolated UI test</title><style>body{margin:12px;background:#dbe1e8}#screen{width:384px;height:216px;padding:4px;background:white;overflow:hidden;box-sizing:content-box}</style></head><body><main id="screen"></main><script type="module">
+import {ModelCalculator} from '/src/engine/model-calculator.js';
+import {createCGStatisticsPanel} from '/src/ui/cg-statistics-panel.js';
+import {sanitizeCGStatistics,cgStatisticsMemoryBytes,switchCGListFile} from '/src/engine/cg-statistics.js';
+import {createCGStatisticalScope} from '/src/engine/cg-statistical-functions.js';
+window.statSaved={};window.statUsed=null;window.statBack=0;window.statTrace=[];window.statSwitch=switchCGListFile;
+window.cgStatsMemoryBytes=cgStatisticsMemoryBytes;
+window.makeStats=(data={},options={})=>{window.statPanel?.destroy();window.statSaved=sanitizeCGStatistics(data);window.statCalculator=new ModelCalculator('cg50');window.statNativeValue=name=>createCGStatisticalScope(window.statCalculator)[name];window.statRestoredEstimate=()=>{const saved=JSON.parse(JSON.stringify(window.statCalculator.save())),restored=new ModelCalculator('cg50',saved);return {value:restored.evaluate('20ŷ'),regression:saved.statisticalNative.regression};};window.statPanel=createCGStatisticsPanel({host:document.querySelector('#screen'),calculator:window.statCalculator,data,complex:options.complex===true,memoryLimitBytes:options.limitBytes,onChange:value=>{window.statTrace.push({event:'saved',file:value.listFile,first:value.lists[0].slice(0,4)});window.statSaved=value;return !options.failStorage;},onUseLists:value=>window.statUsed=value,onBack:()=>window.statBack++});window.statPanel.focus();};
+window.makeStats();
+document.addEventListener('keydown',event=>{if(/^F[1-6]$/.test(event.key)){event.preventDefault();window.statPanel.handleAction('cg-f'+event.key.slice(1));}else if(window.statPanel.handleKey(event))event.preventDefault();});
+document.addEventListener('change',event=>{if(event.target.matches('[data-stat-file]'))window.statTrace.push({event:'capture-change',value:event.target.value,file:window.statSaved.listFile});},true);
+document.addEventListener('change',event=>{if(event.target.matches('[data-stat-file]'))window.statTrace.push({event:'bubble-change',value:event.target.value,file:window.statSaved.listFile});});
+</script></body></html>

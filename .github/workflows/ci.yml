@@ -1,72 +1,148 @@
-name: Test and package Windows
+name: Test and build
+
 on:
   push:
-    branches: [main]
-    tags: ['v*']
   pull_request:
   workflow_dispatch:
+
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  windows:
-    runs-on: windows-latest
-    env:
-      ELECTRON_BUILDER_COMPRESSION_LEVEL: '1'
+  core:
+    name: Core tests (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
-      - run: npm test
-      - run: npm run release:win
-      - name: Test packaged Windows app
-        shell: pwsh
+      - run: mkdir -p .verification
+      - name: Install locked dependencies
+        run: set -o pipefail; npm ci 2>&1 | tee .verification/npm-ci-linux.log
+      - name: Core and compatibility tests
+        run: set -o pipefail; npm test 2>&1 | tee .verification/tests-linux.log
+      - name: Production build
+        run: set -o pipefail; npm run build 2>&1 | tee .verification/build-linux.log
+      - name: Collect dependency notices
+        run: node scripts/dependency-licenses.mjs
+      - name: Dependency audit (report only)
+        if: always()
+        run: npm audit --json > .verification/dependency-audit-ci.json || true
+      - name: Job summary
+        if: always()
+        env:
+          RESULT: ${{ job.status }}
         run: |
-          $env:CNX_ELECTRON_PATH = (Resolve-Path 'release/win-unpacked/CNX Calculator.exe').Path
-          npm run test:ui
-      - name: ZIP and SHA-256
-        shell: pwsh
-        run: |
-          Compress-Archive -Path 'release/win-unpacked/*' -DestinationPath 'release/CNX-Calculator-Windows-x64.zip'
-          Get-ChildItem release -File | Where-Object Extension -In '.exe','.zip' | ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name } | Set-Content release/SHA256SUMS.txt
-          (Get-Content package.json -Raw | ConvertFrom-Json).version | Set-Content release/VERSION
+          echo "## Linux core checks: $RESULT" >> "$GITHUB_STEP_SUMMARY"
+          echo "Review the job steps and evidence artifact for actual test counts and failures. Dependency audit findings are reported separately and are not silently fixed." >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: CNX-Calculator-Windows-x64
+          name: core-evidence
           include-hidden-files: true
+          if-no-files-found: warn
+          path: .verification/
+
+  windows:
+    name: Windows tests, Electron UI and portable build
+    runs-on: windows-latest
+    timeout-minutes: 50
+    env:
+      ELECTRON_BUILDER_COMPRESSION_LEVEL: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: New-Item -ItemType Directory -Force .verification | Out-Null
+      - name: Install locked dependencies
+        run: |
+          npm ci 2>&1 | Tee-Object .verification/npm-ci-windows.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Core and compatibility tests
+        run: |
+          npm test 2>&1 | Tee-Object .verification/tests-windows.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Production build
+        run: |
+          npm run build 2>&1 | Tee-Object .verification/build-windows.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Electron UI tests
+        timeout-minutes: 10
+        run: |
+          npm run test:ui 2>&1 | Tee-Object .verification/ui-windows.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: CG application and integration checks
+        timeout-minutes: 10
+        run: |
+          npm run test:ui:components 2>&1 | Tee-Object .verification/ui-components-windows.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:ui:expanded 2>&1 | Tee-Object .verification/ui-expanded-windows.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build portable Windows executable
+        run: |
+          npm run release:win 2>&1 | Tee-Object .verification/package-windows.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Native CG applications and main controller
+        timeout-minutes: 15
+        run: |
+          npm run test:ui:cg-native 2>&1 | Tee-Object .verification/ui-cg-native-windows.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:ui:cg-main 2>&1 | Tee-Object .verification/ui-cg-main-windows.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Test packaged Windows application
+        timeout-minutes: 10
+        run: |
+          $env:CNX_ELECTRON_PATH = (Resolve-Path 'release/win-unpacked/scientific calculator simulator.exe').Path
+          npm run test:ui 2>&1 | Tee-Object .verification/ui-packaged-windows.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:ui:expanded 2>&1 | Tee-Object .verification/ui-expanded-packaged-windows.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:ui:cg-main 2>&1 | Tee-Object .verification/ui-cg-main-packaged-windows.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Archive and checksum build artifacts
+        run: |
+          Compress-Archive -Path 'release/win-unpacked/*' -DestinationPath 'release/scientific-calculator-simulator-Windows-x64.zip'
+          Get-ChildItem release -File | Where-Object Extension -In '.exe','.zip' | ForEach-Object {
+            '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
+          } | Set-Content release/SHA256SUMS.txt
+      - name: Windows result summary
+        if: always()
+        env:
+          RESULT: ${{ job.status }}
+        run: |
+          "## Windows validation: $env:RESULT" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          if ($env:RESULT -ne 'success') {
+            'Windows validation or packaging did not complete successfully. This run must not be treated as a usable Windows release. Inspect failed steps and windows-evidence.' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          }
+          'Artifacts are CI build outputs only. This workflow does not create tags or public GitHub Releases.' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-evidence
+          include-hidden-files: true
+          if-no-files-found: warn
+          path: |
+            .verification/
+            !.verification/*profile*/**
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: scientific-calculator-simulator-Windows-x64
+          if-no-files-found: error
           path: |
             release/*.exe
             release/*.zip
             release/SHA256SUMS.txt
-            release/VERSION
-            .verification/ui-results.json
-            .verification/calculator.png
-  release:
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-    needs: windows
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: CNX-Calculator-Windows-x64
-          path: artifacts
-      - id: version
-        run: echo "version=$(tr -d '\r\n' < artifacts/release/VERSION)" >> "$GITHUB_OUTPUT"
-      - uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          target_commitish: ${{ github.sha }}
-          name: CNX Calculator v${{ steps.version.outputs.version }}
-          body: |
-            Windows x64 离线科学计算器，十种模式，支持中文、英文、键盘及鼠标，MIT 开源。
-            功能与操作说明见 README。
-            下载便携 EXE 双击运行，或解压整个 ZIP 后运行 CNX Calculator.exe。
-            SHA256SUMS.txt 提供文件校验值。
-          files: |
-            artifacts/release/*.exe
-            artifacts/release/*.zip
-            artifacts/release/SHA256SUMS.txt
+

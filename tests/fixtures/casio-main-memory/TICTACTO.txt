@@ -1,0 +1,147 @@
+'ProgramMode:RUN
+Locate 1,7,"_@E74D__@E761__@E764__@E765_ _@E762__@E779_ _@E761__@E762__@E770__@E770__@E762__@E764_"
+Locate 6,1,"TIC TAC TOE"
+Locate 6,3,"Play (EXE)_#E5E9_"
+Locate 6,4,"Use:"
+Locate 10,4,"1 to 9"
+Locate 10,5,"EXE_ And _EXIT"
+
+Do
+Getkey->K
+LpWhile K=31
+
+Do
+Getkey->K
+K=47=>Goto 3
+LpWhile K<>31
+
+ClrText
+
+0->A
+0->B
+0->C
+
+Locate 16,3,"Tie:"
+Locate 18,4,"_#E5AF_:"
+Locate 18,5,"_#E6A3_:"
+
+While K<>47
+
+ClrList1
+ClrList2
+ClrList3
+
+9->Dim List 1
+9->Dim List 2
+
+Locate 13,7,"         "
+
+Locate 6,3,"7|8|9"
+Locate 6,4,"-+-+-"
+Locate 6,5,"4|5|6"
+Locate 6,6,"-+-+-"
+Locate 6,7,"1|2|3"
+
+MOD(A+B+C,2)+1->P
+P=2=>Locate 5,1,"_#E6A3_ Turn"
+P=1=>Locate 5,1,"_#E5AF_ Turn"
+
+0->T
+
+While T<9
+
+Do
+Getkey->K
+K=47=>Goto 3
+LpWhile K=0
+
+MOD(P,2)+1->Q
+
+If K>=72 And K<=74
+Then 
+List Q[(K-72)*3+1]=1 Or List P[(K-72)*3+1]=1=>Goto 2
+1->List P[(K-72)*3+1]
+P=1=>Locate 6,7-(K-72)*2,"_#E5AF_"
+P=2=>Locate 6,7-(K-72)*2,"_#E6A3_"
+IfEnd
+
+If K>=62 And K<=64
+Then 
+List Q[(K-62)*3+2]=1 Or List P[(K-62)*3+2]=1=>Goto 2
+1->List P[(K-62)*3+2]
+P=1=>Locate 8,7-(K-62)*2,"_#E5AF_"
+P=2=>Locate 8,7-(K-62)*2,"_#E6A3_"
+IfEnd
+
+If K>=52 And K<=54
+Then 
+List Q[(K-52)*3+3]=1 Or List P[(K-52)*3+3]=1=>Goto 2
+1->List P[(K-52)*3+3]
+P=1=>Locate 10,7-(K-52)*2,"_#E5AF_"
+P=2=>Locate 10,7-(K-52)*2,"_#E6A3_"
+IfEnd
+
+If (K>=72 And K<=74) Or (K>=62 And K<=64) Or (K>=52 And K<=54)
+Then 
+List P[1]=1 And List P[2]=1 And List P[3]=1=>10+P->T
+List P[4]=1 And List P[5]=1 And List P[6]=1=>10+P->T
+List P[7]=1 And List P[8]=1 And List P[9]=1=>10+P->T
+List P[1]=1 And List P[4]=1 And List P[7]=1=>10+P->T
+List P[2]=1 And List P[5]=1 And List P[8]=1=>10+P->T
+List P[3]=1 And List P[6]=1 And List P[9]=1=>10+P->T
+List P[1]=1 And List P[5]=1 And List P[9]=1=>10+P->T
+List P[3]=1 And List P[5]=1 And List P[7]=1=>10+P->T
+
+T>9=>Goto 2
+
+MOD(P,2)+1->P
+P=2=>Locate 5,1,"_#E6A3_ Turn"
+P=1=>Locate 5,1,"_#E5AF_ Turn"
+
+1+T->T
+
+IfEnd
+
+Lbl 2
+
+Do
+Getkey->K
+LpWhile K<>0
+
+WhileEnd
+
+T=9=>Locate 5,1,"Tie   "
+T=11=>Locate 5,1,"_#E5AF_ Won "
+T=12=>Locate 5,1,"_#E6A3_ Won "
+
+Locate 13,7,"Press EXE"
+
+T=9=>C+1->C
+T=11=>A+1->A
+T=12=>B+1->B
+
+Locate 20,3,C
+Locate 20,4,A
+Locate 20,5,B
+
+Do
+Getkey->K
+LpWhile K<>0
+
+Do
+Getkey->K
+K=47=>Goto 3
+LpWhile K<>31
+
+WhileEnd
+
+Lbl 3
+
+ClrText
+Locate 2,2,"  Ties:"
+Locate 2,3,"_#E5AF_ Wins:"
+Locate 2,4,"_#E6A3_ Wins:"
+
+Locate 10,2,C
+Locate 10,3,A
+Locate 10,4,B

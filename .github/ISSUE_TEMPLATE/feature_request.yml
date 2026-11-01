@@ -1,0 +1,26 @@
+name: Feature request
+description: Propose a useful feature or documented model behavior
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior and model
+      description: Describe a concrete, usable workflow.
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: References and acceptance checks
+      description: Link official model documentation where relevant. Distinguish hardware behavior, desktop extensions and unverified assumptions.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives

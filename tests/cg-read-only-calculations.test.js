@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {ModelCalculator} from '../src/engine/model-calculator.js';
+import {sampleGraph,graphValue,graphRelationPoint} from '../src/engine/graph.js';
+import {graphTable,dynamicFrames,generateRecursion} from '../src/engine/cg-workspace.js';
+const fixture=()=>{const c=new ModelCalculator('cg50');c.assign('Ans',77);c.statisticalMemory={p:.25};c.financialMemory={n:12,rate:6,pv:100,pmt:0,fv:10,py:12,cy:12};return c;};
+test('graph values, adaptive curves and trace use isolated statistical registers and Ans',()=>{const c=fixture(),before=c.save();assert.ok(sampleGraph(c,['NormPD(x)'],{xmin:-1,xmax:1,ymin:0,ymax:1,samples:32}).curves[0].segments.length);assert.ok(graphValue(c,'NormPD(x)',0)>0);assert.ok(graphRelationPoint(c,{type:'y',expression:'NormPD(x)'},1).y>0);assert.deepEqual(c.save(),before);});
+test('table recursion and dynamic samples do not commit financial or statistical side effects',()=>{const c=fixture(),before=c.save();graphTable(c,['NormPD(x)'],0,1,.5);generateRecursion(c,{type:'explicit',a:'NormPD(n)',start:0,end:2});dynamicFrames(c,{expression:'Cmpd_PMT(12,6,100,0)+A*x',parameter:'A',start:0,end:1,step:1,xmin:0,xmax:1,samples:20});assert.deepEqual(c.save(),before);});
+test('numerical calculus and solving preserve ordinary, answer and special registers',()=>{const c=fixture(),before=c.save();assert.ok(c.integrate('NormPD(x)',-1,1)>.68);assert.ok(Math.abs(c.differentiate('NormPD(x)',0))<1e-8);assert.ok(c.sequence('NormPD(x)',0,2)>0);assert.ok(Math.abs(c.solve('NormPD(x)=0.24197072451914337',1)-1)<1e-6);assert.deepEqual(c.save(),before);});
+test('sampled expressions retain live special-register getters within each individual evaluation',()=>{const c=fixture(),before=c.save();const a=c.integrate('NormPD(x)',-1,1),b=c.integrate('NormPD(x)+CGStat_p',-1,1);assert.ok(Math.abs(2*a-b)<1e-9);assert.deepEqual(c.save(),before);});
+test('all sampling modes see the same named array banks while leaving those banks unchanged',()=>{const c=fixture();c.arrayMemory={lists:[[1,2,3]],matrices:{MatZ:[[1,2],[3,4]]},vectors:{VctZ:[[3],[4]]}};const before=structuredClone(c.arrayMemory);assert.equal(graphValue(c,'Sum(List1)+Norm(VctZ)+det(MatZ)+x',2),11);assert.equal(graphTable(c,['Sum(List1)+x'],0,1,1)[1].values[0],7);assert.deepEqual(c.arrayMemory,before);});

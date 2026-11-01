@@ -1,35 +1,50 @@
 {
-  "name": "cnx-calculator",
-  "version": "0.3.0",
-  "description": "离线科学计算器，参照 fx-991CN X 十种模式与按键布局，支持完整键盘操作",
+  "name": "scientific-calculator-simulator",
+  "version": "0.4.0",
+  "description": "离线多型号科学计算器，支持中英文、自然公式编辑和独立型号状态",
   "type": "module",
   "main": "electron/main.cjs",
   "author": "plateboheng-cell",
   "license": "MIT",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "vite build",
-    "test": "node --test tests/*.test.js",
-    "test:ui": "node scripts/graphical-ui-test.mjs",
+    "build": "npm run licenses && vite build",
+    "test": "node --test --test-concurrency=3 tests/*.test.js",
+    "test:ui": "node scripts/language-ui-test.mjs && node scripts/graphical-ui-test.mjs && node scripts/models-ui-test.mjs && node scripts/completion-ui-test.mjs && node scripts/999-ui-test.mjs && node scripts/usability-ui-test.mjs && node scripts/native-entry-ui-test.mjs && node scripts/model-library-ui-test.mjs && node scripts/ex-ui-test.mjs && node scripts/fraction-layout-ui-test.mjs",
+    "test:ui:library": "node scripts/model-library-ui-test.mjs",
+    "test:ui:ex": "node scripts/ex-ui-test.mjs",
+    "test:ui:native": "node scripts/native-entry-ui-test.mjs",
+    "test:ui:fractions": "node scripts/fraction-layout-ui-test.mjs",
+    "test:ui:expanded": "node scripts/expanded-main-ui-test.mjs && node scripts/graph-completion-ui-test.mjs",
+    "test:ui:components": "node scripts/cg-statistics-ui-test.mjs && node scripts/cg-workspace-ui-test.mjs && node scripts/extensions-ui-test.mjs && node scripts/cg-program-finance-ui-test.mjs",
+    "test:ui:cg-native": "node scripts/cg-setup-ui-test.mjs && node scripts/cg-linear-ui-test.mjs && node scripts/cg-array-ui-test.mjs && node scripts/cg-spreadsheet-ui-test.mjs && node scripts/cg-geometry-ui-test.mjs && node scripts/cg-geometry-extras-ui-test.mjs && node scripts/cg-3d-ui-test.mjs && node scripts/cg-pictureplot-ui-test.mjs && node scripts/cg-graph-native-ui-test.mjs && node scripts/cg-metric-ui-test.mjs && node scripts/cg-metric-input-ui-test.mjs && node scripts/cg-list-formulas-ui-test.mjs && node scripts/cg-calc-input-ui-test.mjs",
+    "test:ui:cg-main": "node scripts/cg-manual-main-ui-test.mjs && node scripts/cg-runmatrix-main-ui-test.mjs && node scripts/cg-main-memory-ui-test.mjs && node scripts/cg-phase12-main-ui-test.mjs && node scripts/cg-calc-main-ui-test.mjs",
+    "test:ui:usability": "node scripts/usability-ui-test.mjs",
+    "test:ui:999": "node scripts/999-ui-test.mjs",
+    "test:ui:completion": "node scripts/completion-ui-test.mjs",
+    "test:ui:models": "node scripts/models-ui-test.mjs",
     "start": "electron .",
-    "pack": "npm run build && electron-builder --win --x64 --dir",
-    "release:win": "npm run build && electron-builder --win portable --x64"
+    "pack": "npm run build && electron-builder --win --x64 --dir --config.electronDist=node_modules/electron/dist --publish never",
+    "release:win": "npm run build && electron-builder --win portable --x64 --config.electronDist=node_modules/electron/dist --publish never",
+    "licenses": "node scripts/dependency-licenses.mjs"
   },
   "dependencies": {
     "@cortex-js/compute-engine": "0.154.0",
     "katex": "^0.16.22",
     "mathjs": "15.2.0",
-    "mathlive": "0.111.1"
+    "mathlive": "0.111.1",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "electron": "44.8.0",
     "electron-builder": "26.15.3",
+    "jsqr": "^1.4.0",
     "playwright": "^1.58.0",
     "vite": "8.3.4"
   },
   "build": {
-    "appId": "io.github.plateboheng-cell.cnx-calculator",
-    "productName": "CNX Calculator",
+    "appId": "io.github.plateboheng-cell.scientific-calculator-simulator",
+    "productName": "scientific calculator simulator",
     "copyright": "Copyright © 2026 plateboheng-cell · MIT",
     "directories": {
       "output": "release",
@@ -45,6 +60,14 @@
       {
         "from": "LICENSE",
         "to": "LICENSE.txt"
+      },
+      {
+        "from": ".verification/THIRD-PARTY-LICENSES.txt",
+        "to": "THIRD-PARTY-LICENSES.txt"
+      },
+      {
+        "from": "docs/THIRD_PARTY_NOTICES.md",
+        "to": "THIRD-PARTY-NOTICES.md"
       }
     ],
     "compression": "normal",
@@ -56,7 +79,7 @@
       "signExecutable": false
     },
     "portable": {
-      "artifactName": "CNX-Calculator-${version}-Windows-x64.exe"
+      "artifactName": "scientific-calculator-simulator-${version}-Windows-x64.exe"
     }
   }
 }

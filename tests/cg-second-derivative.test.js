@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {ModelCalculator} from '../src/engine/model-calculator.js';
+import {cgSecondDerivative} from '../src/engine/cg-second-derivative.js';
+import {latexToExpression} from '../src/engine/notation.js';
+const near=(a,b,tol=1e-8)=>assert.ok(Math.abs(a-b)<tol*Math.max(1,Math.abs(b)),String([a,b]));
+test('native second derivative matches polynomial log and radical examples',()=>{const c=new ModelCalculator('cg50');near(cgSecondDerivative(c,'x^3+4*x^2+x-6',3),26);near(cgSecondDerivative(c,'ln(x)',1e-40),-1e80);near(cgSecondDerivative(c,'log(x)',2),-1/(4*Math.log(10)));near(cgSecondDerivative(c,'sqrt(x)',4),-1/32);});
+test('second derivative applies native angle units before symbolic differentiation',()=>{const c=new ModelCalculator('cg50');for(const [angle,x,factor]of [['Deg',30,Math.PI/180],['Rad',Math.PI/6,1],['Gra',100/3,Math.PI/200]]){c.angle=angle;near(cgSecondDerivative(c,'sin(x)',x),-.5*factor*factor);}});
+test('second derivative preserves special registers and rejects singular or nonconvergent domains',()=>{const c=new ModelCalculator('cg50');c.statisticalMemory={p:.25};c.assign('Ans',17);const before=c.save();near(cgSecondDerivative(c,'NormPD(x)',0),-1/Math.sqrt(2*Math.PI),1e-6);assert.deepEqual(c.save(),before);assert.throws(()=>cgSecondDerivative(c,'1/x',0));assert.throws(()=>cgSecondDerivative(c,'sqrt(x)',-1));assert.throws(()=>cgSecondDerivative(c,'abs(x)',0));});
+test('natural second derivative template converts into the native numerical scope',()=>{const c=new ModelCalculator('cg50');const expression=latexToExpression(String.raw`\left.\frac{d^2}{dx^2}x^3\right|_{x=3}`);near(c.evaluate(expression),18);});

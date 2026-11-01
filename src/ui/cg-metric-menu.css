@@ -1,0 +1,11 @@
+.cg-metric-menu{position:absolute;inset:0;z-index:12;pointer-events:none;box-sizing:border-box;color:#000;font:12px/1.2 Consolas,monospace}
+.cg-metric-menu *{box-sizing:border-box}.cg-metric-menu [hidden]{display:none!important}
+.cg-metric-menu-softkeys{position:absolute;bottom:2px;left:3px;right:3px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;pointer-events:auto;background:#fff}
+.cg-metric-menu-softkeys>button{font:8px/16px Arial,sans-serif!important;background:#000!important;color:#fff!important;border:0!important;border-radius:0!important;min-width:0;padding:0!important;white-space:nowrap}
+.cg-metric-unit-popup{position:absolute;top:3px;left:5px;right:5px;max-height:calc(100% - 25px);overflow:auto;border:1px solid #111;background:white;box-shadow:2px 2px #777;pointer-events:auto;outline:0}
+.cg-metric-unit-popup>header{display:flex;justify-content:space-between;align-items:center;background:#191f58;color:#fff;font:11px/17px Consolas,monospace;padding:0 4px}
+.cg-metric-unit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(5,20px);grid-auto-flow:column;gap:0 3px;padding:2px}
+.cg-metric-unit-grid>button{display:flex;gap:5px;align-items:center;text-align:left;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;background:white;color:black;border:0;border-radius:0;padding:0 3px;font:12px/20px Consolas,monospace}
+.cg-metric-unit-grid>button.selected{background:#191f58;color:#fff}.cg-metric-unit-grid>button:focus-visible{outline:1px solid #fff;outline-offset:-2px}
+.cg-metric-unit-popup>footer{display:flex;justify-content:space-between;padding:0 4px;height:17px;border-top:1px solid #aaa}.cg-metric-unit-popup>footer>button{font:11px/15px Consolas,monospace;background:white;color:black;border:0;padding:0 5px;min-width:25px}
+.cg-metric-menu-error{position:absolute;bottom:21px;left:4px;right:4px;max-height:36px;overflow:auto;background:#fff0ce;color:#641600;font:11px/14px Consolas,monospace;pointer-events:auto;padding:2px;z-index:1}

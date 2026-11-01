@@ -1,0 +1,28 @@
+import {assert} from './calculator.js';
+import {geometryObject} from './cg-geometry.js';
+import {updateGeometryConstructions,geometryObjectPointIds} from './cg-geometry-tools.js';
+import {geometryMeasure,solveGeometryConstraints,evaluateGeometryExpression} from './cg-geometry-measurements.js';
+export function geometryAnimationConfig(state){state.animation??={pairs:[],traces:[],steps:20,times:0,columns:[]};return state.animation;}
+export function addGeometryAnimation(state,point,curve,{replace=false}={}){
+  const p=state.points.find(p=>p.id===point),o=state.objects.find(o=>o.id===curve);assert(p&&o&&['segment','circle','arc','semicircle','function'].includes(o.kind),'Select a point and a segment, circle, arc or function');
+  const resolved=geometryObject(state,o);let parameter=p.x;if(resolved.a){const dx=resolved.b.x-resolved.a.x,dy=resolved.b.y-resolved.a.y;parameter=((p.x-resolved.a.x)*dx+(p.y-resolved.a.y)*dy)/(dx*dx+dy*dy);}else if(resolved.center){const angle=Math.atan2(p.y-resolved.center.y,p.x-resolved.center.x);parameter=resolved.kind==='circle'?angle:(((angle-resolved.start)%(2*Math.PI)+2*Math.PI)%(2*Math.PI))/resolved.sweep;}
+  const config=geometryAnimationConfig(state);if(replace)config.pairs=[];config.pairs=config.pairs.filter(pair=>pair.point!==point);config.pairs.push({point,curve,t0:0,t1:1});p.construction={kind:'onCurve',curve,parameter};return config;
+}
+export function validateGeometryAnimation(config){assert(Number.isInteger(config.steps)&&config.steps>=2&&config.steps<=100,'Animation Steps: 2–100');assert(Number.isInteger(config.times)&&config.times>=0&&config.times<=100000,'Animation Times must be a nonnegative integer');for(const pair of config.pairs)assert([pair.t0,pair.t1].every(n=>Number.isFinite(n)&&n>=-10&&n<=10),'Animation t0/t1: −10 to 10');return config;}
+export function geometryAnimationFrame(state,fraction,{calculator}={}){
+  const config=validateGeometryAnimation(geometryAnimationConfig(state));assert(config.pairs.length,'Add an animation first');assert(Number.isFinite(fraction)&&fraction>=0&&fraction<=1,'Animation fraction: 0–1');
+  for(const pair of config.pairs){const p=state.points.find(p=>p.id===pair.point),raw=state.objects.find(o=>o.id===pair.curve);assert(p&&raw,'Animation references a deleted object');const o=geometryObject(state,raw),t=pair.t0+(pair.t1-pair.t0)*fraction;p.construction={kind:'onCurve',curve:pair.curve,parameter:o.kind==='circle'?t*2*Math.PI:t};}
+  updateGeometryConstructions(state,{calculator});seedPerpendicularCongruence(state,config);const anchors=new Set(config.pairs.flatMap(pair=>geometryObjectPointIds(state.objects.find(o=>o.id===pair.curve)))),degree=new Map();for(const constraint of state.constraints||[]){const ids=new Set(constraint.selection.flatMap(id=>state.points.some(p=>p.id===id)?[id]:geometryObjectPointIds(state.objects.find(o=>o.id===id)||{})));for(const id of ids)degree.set(id,(degree.get(id)||0)+1);}const free=state.points.filter(p=>!p.construction&&!anchors.has(p.id)),maximum=Math.max(0,...free.map(p=>degree.get(p.id)||0)),preferred=free.filter(p=>(degree.get(p.id)||0)<maximum).map(p=>p.id);try{solveGeometryConstraints(state,{calculator,pinned:[...anchors,...preferred]});}catch{solveGeometryConstraints(state,{calculator,pinned:[...anchors]});}return state;
+}
+/** Exact intersection of the perpendicular and equal-distance constraints used by the manual's locus construction. */
+function seedPerpendicularCongruence(state,config){
+  for(const constraint of state.constraints||[]){if(constraint.type!=='congruence')continue;const sides=constraint.selection.map(id=>state.objects.find(o=>o.id===id));if(sides.length!==2||!sides.every(o=>o?.a&&o?.b))continue;const common=[sides[0].a,sides[0].b].find(id=>id===sides[1].a||id===sides[1].b),d=state.points.find(p=>p.id===common);if(!d||d.construction)continue;
+    for(const pair of config.pairs){const movingSide=sides.find(o=>o.a===pair.point||o.b===pair.point),other=sides.find(o=>o!==movingSide),base=state.objects.find(o=>o.id===pair.curve);if(!movingSide||!other||!base?.a||!base?.b)continue;const perpendicular=(state.constraints||[]).some(c=>c.type==='angle'&&Math.abs(c.target-90)<1e-10&&c.selection.includes(movingSide.id)&&c.selection.includes(base.id));if(!perpendicular)continue;const e=state.points.find(p=>p.id===pair.point),focus=state.points.find(p=>p.id===(other.a===common?other.b:other.a)),a=state.points.find(p=>p.id===base.a),b=state.points.find(p=>p.id===base.b),length=Math.hypot(b.x-a.x,b.y-a.y),nx=-(b.y-a.y)/length,ny=(b.x-a.x)/length,dx=e.x-focus.x,dy=e.y-focus.y,den=2*(nx*dx+ny*dy);if(Math.abs(den)<1e-12)continue;const t=-(dx*dx+dy*dy)/den;d.x=e.x+nx*t;d.y=e.y+ny*t;
+    }
+  }
+}
+export function geometryAnimationTable(state,{calculator}={}){
+  const working=JSON.parse(JSON.stringify(state)),config=validateGeometryAnimation(geometryAnimationConfig(working));assert(config.columns.length&&config.columns.length<=26,'Animation table: 1–26 columns');const rows=[];
+  for(let step=0;step<=config.steps;step++){geometryAnimationFrame(working,step/config.steps,{calculator});rows.push(config.columns.map(column=>{try{let value;if(column.descriptor.type==='expression'){const o=working.objects.find(o=>o.id===column.descriptor.selection[0]);value=evaluateGeometryExpression(working,o,calculator);}else value=geometryMeasure(working,column.descriptor);if(column.component)value=value[column.component];assert(typeof value==='number'&&Number.isFinite(value),'Undefined table value');return value;}catch{return null;}}));}
+  return {headers:config.columns.map(c=>c.label||c.descriptor.type),rows};
+}

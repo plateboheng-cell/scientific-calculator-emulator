@@ -1,0 +1,194 @@
+'ProgramMode:RUN
+
+Goto 0
+"X,Y -> Pos"
+"W -> Rot"
+
+"S -> Move Step"
+
+"+X -> forward"
+"+Y -> right"
+"+W -> turn right"
+
+"DEF lines"
+"X->L1 Y->L2"
+"coords 2 by 2 for lines"
+
+"ScreenH -> 216"
+"ScreenW -> 384"
+
+"H -> Hfov"
+
+"1.778 screen ratio" 
+
+"M -> Rndr dist"
+Lbl 0
+
+ClrList1
+{1,10}->List 1
+ClrList2
+{10,15}->List 2
+
+0->X
+0->Y
+0->W
+
+2->S
+
+90->F
+
+20->M
+
+Goto 3
+
+Goto 1
+"Apply cam transforms"
+"X'->L3 Y'->L4"
+"dist to cam->L5"
+"fraction to center->L6"
+Lbl 1
+
+ClrList3
+ClrList4
+ClrList5
+ClrList6
+
+For 1->I To (Dim List 1)
+List 1[I]-X->List 3[I]
+List 2[I]-Y->List 4[I]
+List 3[I]*cos (W)-List 4[I]*sin (W)->List 3[I]
+List 3[I]*cos (W)+List 4[I]*sin (A)->List 4[I]
+
+Sqrt(List 3[I]^2+List 4[I]^2)->List 5[I]
+
+Arg (List 3[I]+List 4[I]*Imaginary)->List 6[I]
+
+List 6[I]<>0=>F/2/List 6[I]->List 6[I]
+
+Next
+Goto 4
+
+
+Goto 2
+"Drawing"
+"Wall height depends on depth"
+"Line X1,Y1,X2,Y2"
+Lbl 2
+
+Locate 1,7,"_ViewWindow _-192,192,0.1,-108,108,0.1"
+Locate 1,7,"_ClrGraph_"
+
+For 1->I To (Dim List 1) Step 2
+
+List 5[I]/M->A
+List 5[I+1]/M->B
+
+Locate 1,4,List 6[I]
+Locate 1,5,I
+
+Locate 1,2,"                     "
+Locate 1,3,"                     "
+
+If A>0 And A<1
+Then A*108->A
+List 6[I]*192->C
+Locate 1,7,"_F-Line _C,A,C,-A"
+Locate 1,2,"A:"
+Locate 3,2,A
+Locate 1,3,"C:"
+Locate 3,3,C
+IfEnd
+
+If B>0 And B<1
+Then B*108->B
+List 6[I+1]*192->D
+Locate 1,7,"_F-Line _D,B,D,-B"
+IfEnd
+
+If A>0 And A<1 And B>0 And B<1
+Then 
+Locate 1,7,"_F-Line _D,-B,C,-A"
+Locate 1,7,"_F-Line _D,B,C,A"
+IfEnd
+
+Next
+Goto 5
+
+Goto 3
+"Control loop"
+"GF:28(F)"
+"GB:37(B)"
+"TR:27(R)"
+"TL:38(L)"
+
+"GR:69(F2)"
+"GL:79(F1)"
+
+"CNSL:47(EXIT)"
+Lbl 3
+
+
+0->K
+While K<>47
+
+Getkey->K
+Locate 2,1,"  "
+Locate 2,1,K
+
+If K<>0
+Then 
+
+cos (W)*S->A
+sin (W)*S->B
+
+K=28=>X+A->X
+K=28=>Y+B->Y
+K=28=>Goto 1
+
+K=37=>X-A->X
+K=37=>Y-B->Y
+K=37=>Goto 1
+
+K=69=>X+B->X
+K=69=>Y-A->Y
+K=69=>Goto 1
+
+K=79=>X-B->X
+K=79=>Y+A->Y
+K=79=>Goto 1
+
+K=27=>W+10->W
+K=27=>Goto 1
+
+K=38=>W-10->W
+K=38=>Goto 1
+
+Lbl 4
+
+Locate 1,6,"    "
+Locate 1,6,W
+
+Goto 2
+
+Lbl 5
+
+K=78=>Goto 7
+Lbl 6
+
+IfEnd
+
+WhileEnd
+
+Goto 7
+"Console ctrl"
+"open cnsl:78(SHIFT)"
+Lbl 7
+
+Locate 1,1,"Move(1)"
+Locate 1,1,"SetPosition(2)"
+Locate 1,1,"Turn(3)"
+Locate 1,1,"SetRotation(4)"
+
+Goto 6
+
+

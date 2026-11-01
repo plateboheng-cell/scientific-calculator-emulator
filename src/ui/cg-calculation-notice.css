@@ -1,0 +1,2 @@
+.cg-calculation-notice{position:fixed;margin:0;padding:10px 12px;background:white;color:#000;border:2px solid #111;border-radius:0;box-shadow:2px 2px #666;font:13px/1.4 Consolas,monospace;z-index:30}
+.cg-calculation-notice p{margin:0 0 10px}.cg-calculation-notice form>button{float:none;display:block;margin-left:auto;padding:1px 12px;background:#111;color:#fff;border:0;border-radius:0;font:12px/19px Consolas,monospace}

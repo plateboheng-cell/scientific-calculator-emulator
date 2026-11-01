@@ -1,0 +1,4 @@
+.cg-capture-dialog{position:fixed;inset:auto;margin:0;padding:8px;background:white;color:black;border:2px solid black;border-radius:0;font:13px Consolas,monospace;box-shadow:3px 3px 0 #0005;overflow:auto;z-index:20}
+.cg-capture-dialog strong{display:block;font-size:13px;border-bottom:1px solid black;margin-bottom:8px}
+.cg-capture-dialog label{display:flex;align-items:center;gap:8px}.cg-capture-dialog input{min-width:0;width:45px;border:1px solid black;background:white;color:black;font:inherit}
+.cg-capture-dialog [role=alert]{font-size:11px;min-height:14px}.cg-capture-dialog button{float:none;background:white;color:black;border:1px solid black;border-radius:0;padding:1px 6px;margin-right:5px;font:11px Consolas,monospace}

@@ -1,0 +1,205 @@
+'ProgramMode:RUN
+Locate 1,7,"_@E74D__@E761__@E764__@E765_ _@E762__@E779_ _@E761__@E762__@E770__@E770__@E762__@E764_"
+Locate 4,1,"SNAKE"
+Locate 3,3,"Play _#E5E9_"
+Locate 3,4,"Mode"
+Locate 3,5,"Speed 10"
+Locate 18,3,"Use:"
+Locate 18,4,"_#E5E8__#E5E9__#E5EA__#E5EB_"
+
+9->T
+0->L
+0->E
+(-)1->M
+
+ClrList1
+ClrList2
+
+
+While E=0
+
+Getkey->K
+
+K=27 And L=0=>1->E
+
+K=28=>L-1->L
+K=37=>L+1->L
+
+L<0=>2->L
+L>2=>0->L
+
+L=1 And (K=38 Or K=27)=>M*(-)1->M
+M=(-)1=>Locate 8,4,"_#E5E8_SNEK_#E5E9_"
+M=1=>Locate 8,4,"_#E5E8_GOD_#E5E9_ "
+
+L=2 And K=38 And T>0=>T-1->T
+L=2 And K=27 And T<9=>T+1->T
+
+K=27 Or K=38=>Locate 9,5,"  "
+K=27 Or K=38=>Locate 9,5,T+1
+
+If L=0
+Then Locate 2,3,"_#E5ED_"
+Locate 2,4," "
+Locate 2,5," "
+Locate 18,4," "
+IfEnd
+
+If L=1
+Then Locate 2,3," "
+Locate 2,4,"_#E5ED_"
+Locate 2,5," "
+Locate 18,4,"_#E5E8_"
+IfEnd
+
+If L=2
+Then Locate 2,3," "
+Locate 2,4," "
+Locate 2,5,"_#E5ED_"
+Locate 18,4,"_#E5E8_"
+IfEnd
+
+While K<>0
+Getkey->K
+WhileEnd
+
+WhileEnd
+
+ClrText
+9-T->T
+Locate 7,4,"Loading..."
+
+
+11->X
+4->Y
+
+4->D
+1->S
+0->P
+
+ClrList1
+ClrList2
+ClrList3
+ClrList4
+
+145->Dim List 3
+
+For 1->I To S
+X+1->List 1[I]
+Y->List 2[I]
+1->List 3[List 1[I]+((List 2[I]-1)*21)]
+Next
+
+ClrText
+
+X->V
+Y->W
+
+Locate 1,7,"//////////////////////////////////////////"
+
+While 1=1
+
+If T<>0
+Then For T*5->I To 1 Step (-)1
+Getkey<>0=>Getkey->K
+Next
+IfEnd
+
+If V=X And W=Y
+Then S+1->S
+Locate 12,7,S
+0->E
+
+
+While E=0
+ClrList4
+RanInt#(1,21)->V
+0->C
+
+For 1->I To 6
+If List 3[V+((I-1)*21)]=0 And ( Not (X=V And I=Y))
+Then C+1->C
+I->List 4[C]
+IfEnd
+Next
+
+If C>1
+Then 1->E
+RanInt#(1,Dim List 4)->R
+List 4[R]->W
+
+Else If C=1
+Then List 4[1]->W
+1->E
+IfEnd
+IfEnd
+WhileEnd
+
+List 1[Dim List 1]->List 1[S]
+List 2[Dim List 2]->List 2[S]
+IfEnd
+
+Locate V,W,"$"
+
+Getkey->K
+
+K=28 And D<>3=>1->D
+K=27 And D<>4=>2->D
+K=37 And D<>1=>3->D
+K=38 And D<>2=>4->D
+
+If M=1
+Then D=1 And Y>1=>Y-1->Y
+D=2 And X<21=>X+1->X
+D=3 And Y<6=>Y+1->Y
+D=4 And X>1=>X-1->X
+IfEnd
+
+If M=(-)1
+Then D=1=>Y-1->Y
+D=2=>X+1->X
+D=3=>Y+1->Y
+D=4=>X-1->X
+IfEnd
+
+X=0 Or X=22 Or Y=0 Or Y=7=>Break
+
+
+D=1=>Locate X,Y,"_#E69C_"
+D=2=>Locate X,Y,"_#E69B_"
+D=3=>Locate X,Y,"_#E69D_"
+D=4=>Locate X,Y,"_#E69A_"
+
+MOD(P+S-1,S)+1->A
+MOD(P,S)+1->B
+
+Locate List 1[A],List 2[A],"_#E6A5_"
+
+Locate List 1[B],List 2[B]," "
+
+1->List 3[List 1[A]+((List 2[A]-1)*21)]
+
+0->List 3[List 1[B]+((List 2[B]-1)*21)]
+
+X->List 1[MOD(P,S)+1]
+Y->List 2[MOD(P,S)+1]
+
+P+1->P
+P=S=>0->P
+
+S=124=>Break
+M=(-)1 And List 3[X+((Y-1)*21)]<>0=>Break
+
+WhileEnd
+
+For 0->I To Dim List 1 Step 1
+MOD(P+I,S)+1->A
+Locate List 1[A],List 2[A]," "
+Next
+
+ClrText
+
+S=124=>Locate 8,4,"YOU WONChar!"
+S<>124=>Locate 10,2,"ded"
+Locate 9,5,"Score:"
+Locate 11,6,S

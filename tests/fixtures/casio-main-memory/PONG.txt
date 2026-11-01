@@ -1,0 +1,101 @@
+'ProgramMode:RUN
+Locate 1,7,"PRESS EXE"
+Locate 1,3,"CONTROLS: 1,4,-,/"Disps
+For 1->I To 7
+Locate 1,I,">         |         <"
+Next
+Locate 1,7,"_____________________"
+
+0->Z
+0->S
+
+4->A
+Locate 1,A,"_#E5B8_"
+4->B
+Locate 1,A,"_#E5B8_"
+11->X
+4->Y
+Locate X,Y,"o"
+0.3->V
+RanInt#(0,1)=1=>(-)V->V
+RanInt#((-)2,2)/10->W
+
+
+While Z=0
+
+Getkey->K
+K<>0=>Locate 1,A,"<"
+K=72 And A<7=>A+1->A
+K=73 And A>1=>A-1->A
+
+Getkey->L
+L<>0=>Locate 21,B,">"
+L=32 And B<7=>B+1->B
+L=33 And B>1=>B-1->B
+
+If L<>0 Or K<>0
+Then 
+Locate 1,A,"_#E5B8_"
+Locate 21,B,"_#E5B8_"
+IfEnd
+
+
+If X+.5<3 And V<0
+Then 
+If Y>=A And Y<A+1
+Then (-)V->V
+S+1->S
+Else Locate 8,4,"Winner_#E691_"
+1->Z
+Stop
+IfEnd
+RanInt#((-)2,2)/10->W
+IfEnd
+
+
+If X>=20 And V>0
+Then 
+If Y>=B And Y<B+1
+Then (-)V->V
+S+1->S
+Else Locate 8,4,"_#E690_Winner"
+1->Z
+Stop
+IfEnd
+RanInt#((-)2,2)/10->W
+IfEnd
+
+If Y<1
+Then (-)W->W
+IfEnd
+
+If Y>=7
+Then (-)W->W
+IfEnd
+
+X->T
+Frac T>=.5=>1+T->T
+Y->U
+Frac U>=.5=>1+U->U
+
+Int U<7=>Locate Int T,Int U," "
+
+Int U=7=>Locate Int T,Int U,"_"
+
+Int T=11=>Locate Int T,Int U,"|"
+
+X+V->X
+Y+W->Y
+
+X->T
+Frac T>=.5=>1+T->T
+Y->U
+Frac U>=.5=>1+U->U
+
+Locate 11,1,S
+
+Locate 1,7,Y
+
+Locate Int T,Int U,"o"
+
+WhileEnd

@@ -1,6 +1,92 @@
+import {APP_NAME} from './brand.js';
 // UI text is kept separate from expressions, input values and stored data.
 const english = {
-  'CNX 科学计算器': 'CNX Scientific Calculator',
+  '揭盖':'Uncover', '重播揭盖动画':'Replay cover removal',
+  '单元格输入不得超过 10 字节':'Cell input must not exceed 10 bytes',
+  '统计行数超出型号限制':'Statistics row capacity exceeded',
+  '基数 Ans 须为 32 位整数':'Base-N Ans must be a 32-bit integer',
+  '主菜单；数字/字母或方向键、= 选择应用':'Main menu; number/letter shortcuts or arrows and = to select an app',
+  '最多 160 行':'Up to 160 rows','最多 80 行':'Up to 80 rows','最多 53 行':'Up to 53 rows',
+  '分数':'Fraction','= 求解':'= Solve','输入变量值，按 = 确认':'Enter variable values; press = to confirm',
+  '↑↓ 选择求解变量，按 = 求解':'↑↓ choose a variable; press = to solve',
+  'SOLVE 仅可在计算模式中使用':'SOLVE is available only in Calculate',
+  '请先输入方程，再按 SHIFT CALC':'Enter an equation first, then press SHIFT CALC',
+  '方程中没有可求解的变量':'The equation has no variable to solve',
+  'ALL 最多支持 42 项':'ALL supports at most 42 entries','分布列表须有 1–42 项':'Distribution lists must contain 1–42 items',
+  '通用常数':'Universal constants','电磁常数':'Electromagnetic constants','原子与核常数':'Atomic and nuclear constants',
+  '物理与化学常数':'Physical and chemical constants','采用值':'Adopted values','其他':'Other','库仑常数':'Coulomb constant',
+  '无法回归：x 数据无变化':'Cannot regress: x data are constant','无法回归：至少需要三个不同的 x':'Regression needs at least three distinct x values',
+  '无法回归：数据退化':'Cannot regress: rank-deficient data','请先输入操作数':'Enter an operand first',
+  '交点计算需要两条曲线':'Intersection needs two curves','区间内未找到可靠极值':'No reliable extremum found in the interval',
+  '缩放系数须大于 1 且不超过 100':'Zoom factors must be greater than 1 and at most 100',
+  '主菜单；方向键与 OK 选择十二种应用':'Main menu; use the arrow keys and OK to choose twelve apps',
+  '分布':'Distribution','数据表格':'Spreadsheet','二项概率密度':'Binomial PD','二项累积分布':'Binomial CD',
+  '正态概率密度':'Normal PD','正态累积分布':'Normal CD','反正态累积分布':'Inverse Normal',
+  '泊松概率密度':'Poisson PD','泊松累积分布':'Poisson CD','列表':'List',
+  '下限':'Lower','上限':'Upper','区域':'Area','错误':'Error','单元格内容':'Cell contents',
+  '编辑单元格':'Edit cell','公式填充':'Fill formula','数值填充':'Fill value','公式':'Formula','数值':'Value','范围':'Range',
+  '复制 & 粘贴':'Copy & Paste','剪切 & 粘贴':'Cut & Paste','粘贴':'Paste','全部删除':'Delete all','剩余字节':'Free bytes','重新计算':'Recalculate',
+  '概率须在 0 到 1 之间':'Probability must be between 0 and 1',
+  '整数参数须在 0 到 1000000 之间':'Integer parameters must be between 0 and 1000000',
+  '数据须小于等于试验次数':'Data must not exceed the number of trials',
+  '标准差须大于 0，参数须为有限实数':'Standard deviation must be positive; parameters must be finite real numbers',
+  '分布下限不得大于上限':'The lower bound must not exceed the upper bound',
+  '区域须介于 0 和 1 之间（不含端点）':'Area must be strictly between 0 and 1',
+  '泊松平均值须大于 0 且不超过 1000000':'Poisson mean must be positive and at most 1000000',
+  '分布计算未收敛':'Distribution calculation did not converge','不支持的分布':'Unsupported distribution',
+  '分布列表须有 1–45 项':'Distribution lists must contain 1–45 items',
+  '此型号不支持分布应用':'Distribution is unavailable on this model','此型号不支持数据表格应用':'Spreadsheet is unavailable on this model',
+  '单元格范围须为 A1:E45':'Cell range must be within A1:E45','单元格范围顺序错误':'Invalid cell range order',
+  '不支持的数据表格算式':'Unsupported spreadsheet expression','范围中没有数据':'The range has no data',
+  '数据表格结果须为有限实数':'Spreadsheet values must be finite real numbers',
+  '单元格输入不得超过 49 字节':'Cell input must not exceed 49 bytes','数据表格内存不足':'Spreadsheet memory is full',
+  '尚未实现':'Not implemented', '应用菜单':'Applications', 'MODE polar output':'MODE polar output',
+  '主菜单':'Main menu',
+  '主屏幕':'Home', '开机':'Power', '功能':'Function', '格式':'Format',
+  '比例式':'Ratio', '上翻页':'Page up', '下翻页':'Page down',
+  '输入函数前缀后按 Tab 补全；↑↓ 选择，Esc 关闭；Ctrl+Space 查看候选。无候选时 Tab 保持公式空位导航。':'Type a function prefix and press Tab to complete. Use ↑↓ to select, Esc to close, and Ctrl+Space to request suggestions. Without suggestions, Tab keeps its formula-placeholder navigation.',
+  '屏幕下方对应软菜单':'Corresponding on-screen soft menu', '关系列表：绘图':'Relation list: Draw',
+  '登记函数并移到下一项':'Register function and move to next slot', '坐标追踪 / 图形缩放':'Trace / Zoom',
+  '图形视窗 / 图形分析':'View Window / G-Solv',
+  '图形':'Graph', '键盘帮助':'Keyboard help', '编辑函数':'Edit functions', '坐标追踪':'Trace coordinates',
+  '联立方程（2–3 元）':'Simultaneous equations (2–3 unknowns)', '多项式方程（2–3 次）':'Polynomial equations (degrees 2–3)',
+  '图形缩放':'Graph zoom', '图形视窗':'Graph window', '区间求根':'Interval root', '绘图':'Draw',
+  '追踪坐标':'Trace x', '切换曲线':'Switch curve', '放大 / 缩小图形':'Zoom in / out',
+  '放大':'Zoom in', '缩小':'Zoom out', '函数图形':'Function graph', '应用视窗':'Apply window',
+  '左边界':'Left bound', '右边界':'Right bound', '求一个实根':'Find one real root',
+  '数值搜索一个根，不保证全部根。':'Numerically finds one root; does not guarantee all roots.',
+  '请先输入并启用函数':'Enter and enable a function first', '请先输入函数':'Enter a function first',
+  '图形错误':'Graph error', '图形窗口无效':'Invalid graph window', '图形窗口超出数值精度':'Graph window exceeds numerical precision',
+  '图形采样数须为 32–2048':'Graph samples must be 32–2048', '图形最多支持 20 个函数':'Graphs support at most 20 functions',
+  '图形函数须为表达式':'Graph functions must be expressions', '图形不支持此函数':'This function is not supported in graphs',
+  '图形结果须为有限实数':'Graph values must be finite real numbers', '该坐标处函数无定义':'The function is undefined at this coordinate',
+  '图形采样超出计算预算':'Graph sampling exceeded its computation budget', '区间内未找到可靠实根':'No reliable real root found in the interval',
+  '图形在窗口内没有实数值':'No real values in the graph window',
+  '此型号不支持该矩阵变量':'This matrix variable is unavailable on this model',
+  '此型号不支持该向量变量':'This vector variable is unavailable on this model',
+  '矩阵尺寸超出型号限制':'Matrix dimensions exceed this model limit',
+  '向量维数超出型号限制':'Vector dimensions exceed this model limit',
+  '方程次数超出型号限制':'Polynomial degree exceeds this model limit',
+  '未知数个数超出型号限制':'System size exceeds this model limit',
+  '此型号仅支持单函数表格':'This model only supports single-function tables',
+  '此型号不支持 Ask-x':'This model does not support Ask-x',
+  '表格输入数量或数值错误':'Invalid table input count or values', 'x 数值列表':'List of x values', '2nd / 变量':'2nd / variables',
+  '切换型号':'Switch model', '返回':'Back', '函数':'Function', '目录':'Catalog', '工具':'Tools', '转换':'Format',
+  '变量':'Variables', '定义 f(x)':'Define f(x)', '定义 g(x)':'Define g(x)',
+  '此型号不支持注册函数':'This model does not support registered functions',
+  '循环引用错误':'Circular reference error', '请先定义函数':'Define the function first',
+  '无法读取已保存的数据':'Saved data could not be read',
+  '无法保存设置：请检查可用存储空间':'Settings could not be saved: check available storage',
+  '近似结果':'Approximate result', '求根未收敛':'Root finding did not converge',
+  '单位换算':'Unit conversions',
+  '编辑已保存数据':'Edit saved data',
+  '求根范围超出数值精度':'Root range exceeds numerical precision',
+  '结果超出数值范围':'Result exceeds numerical range',
+  '统计结果超出数值范围':'Statistics exceed numerical range',
+  '回归类型错误':'Invalid regression model', '数据格式错误':'Invalid data format',
+  '标准':'Standard', '小数':'Decimal', '工程记数法':'Engineering notation', '六十进制':'Sexagesimal',
+  '函数 / 求解':'Functions / solver', '目录 / 工具':'Catalog / tools',
+  '转换 / 标准与小数':'Format / standard and decimal', 'SHIFT / 变量':'SHIFT / variables',
   '计算器屏幕': 'Calculator display', '方向键': 'Navigation',
   '上': 'Up', '下': 'Down', '左': 'Left', '右': 'Right', '算式': 'Expression',
   '计算': 'Calculate', '复数': 'Complex', '基数': 'Base-N', '矩阵': 'Matrix',
@@ -147,7 +233,7 @@ export function translate(source, language) {
     .replace(/(\d+) 次方程/g,'Degree $1 equation')
     .replace(/(\d+) 次/g,'Degree $1')
     .replace(/第 (\d+) 行/g,'Row $1')
-    .replace(/(\d+) 行/g,'$1 rows')
+    .replace(/表格最多 (\d+) 行/g,'Table supports up to $1 rows').replace(/(\d+) 行/g,'$1 rows')
     .replace(/(\d+) 列/g,'$1 columns')
     .replace(/(\d+) 维/g,'$1 dimensions')
     .replace(/定义 (Mat[A-D])（最大 4×4）/g,'Define $1 (up to 4×4)')
@@ -189,7 +275,7 @@ export function createLocalizer(root, initialLanguage='zh') {
   function setLanguage(next) {
     language=next==='en'?'en':'zh';
     document.documentElement.lang=language==='en'?'en':'zh-CN';
-    document.title=language==='en'?'CNX Calculator':'CNX 计算器';
+    document.title=APP_NAME;
     localize();
   }
   setLanguage(initialLanguage);

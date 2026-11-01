@@ -1,0 +1,8 @@
+<!doctype html><html><head><meta charset="UTF-8"><style>*{box-sizing:border-box}html,body{margin:0;width:340px;height:177px;overflow:hidden}#host{height:177px;width:340px;overflow:auto;background:white;--ink:#111;--lcd:#fff;font:11px Arial}</style></head><body><section id="host"></section><script type="module">
+import {ModelCalculator} from '/src/engine/model-calculator.js';
+import {createCGGeometryPanel} from '/src/ui/cg-geometry-panel.js';
+const host=document.getElementById('host'),calculator=new ModelCalculator('cg50');let panel;
+window.fixtureErrors=[];window.fixtureStores={lists:{},sheets:{},pictures:{}};window.addEventListener('error',event=>window.fixtureErrors.push(event.message));
+window.mountGeometry=data=>{panel?.destroy();panel=createCGGeometryPanel({host,calculator,data:data||{},onChange:next=>window.fixtureData=next,onStoreList:(number,values)=>{window.fixtureStores.lists[number]=values;},onStoreSpreadsheet:(name,rows,options)=>{if(window.fixtureStores.sheets[name]&&!options?.overwrite)throw Error('File exists');window.fixtureStores.sheets[name]=rows;},onStorePicture:(slot,picture,window)=>{globalThis.fixtureStores.pictures[slot]={picture,window};},onRecallPicture:slot=>window.fixtureStores.pictures[slot]});window.fixturePanel=panel;return true;};
+window.fixtureReady=true;
+</script></body></html>

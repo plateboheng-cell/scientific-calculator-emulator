@@ -1,0 +1,47 @@
+name: Bug report
+description: Report a reproducible calculation or interaction problem
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "Review docs/COMPATIBILITY.md first. Do not post private data or security exploitation details."
+  - type: dropdown
+    id: model
+    attributes:
+      label: Model or component
+      options:
+        - fx-991CN X
+        - fx-991CN CW (Experimental)
+        - fx-999CN CW (Experimental)
+        - TI-36X Pro (Experimental)
+        - fx-CG50 (Experimental)
+        - Model selector or startup
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Version and environment
+      placeholder: "0.8.1, Windows 11 x64, portable EXE or source checkout"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Exact steps and settings
+      description: Include the expression, angle unit, output format, language and complete key sequence.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual results
+      description: Include an independent reference or hardware result and a numerical tolerance.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Attach your own screenshot or sanitized logs where helpful.

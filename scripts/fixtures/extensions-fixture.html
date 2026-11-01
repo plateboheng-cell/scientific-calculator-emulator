@@ -1,0 +1,14 @@
+<!doctype html>
+<html><head><meta charset="UTF-8"><style>*{box-sizing:border-box}html,body{margin:0;width:340px;height:177px;overflow:hidden}#host{height:177px;width:340px;overflow:auto;background:white;--ink:#111;--lcd:#fff;font:11px Arial}</style></head><body><section id="host"></section><script type="module">
+import {ModelCalculator} from '/src/engine/model-calculator.js';
+import {createCGProgramPanel} from '/src/ui/cg-program-panel.js';
+import {createFinancePanel} from '/src/ui/finance-panel.js';
+import {createCGVisualPanel} from '/src/ui/cg-visual-panel.js';
+const host=document.getElementById('host');let calculator=new ModelCalculator('cg50'),panel;
+window.fixtureMemory={};window.fixtureMemoryCount=0;window.fixtureData={};window.fixtureErrors=[];
+window.addEventListener('error',e=>window.fixtureErrors.push(e.message));
+window.mountFixture=(mode,data={},workspace={statistics:{lists:[]},strings:[]},arrays={})=>{panel?.destroy();window.fixtureWorkspace=workspace;document.documentElement.lang='en';const onChange=next=>{window.fixtureData=next;};if(mode==='program')panel=createCGProgramPanel({host,calculator,data,workspace,matrices:arrays.matrices||{},vectors:arrays.vectors||{},graph:{expressions:['x^2'],enabled:[true]},onChange,onMemoryChange:next=>{window.fixtureMemory=next;window.fixtureMemoryCount++;}});else if(mode==='finance')panel=createFinancePanel({host,calculator,data,onChange});else panel=createCGVisualPanel({host,calculator,data,mode,onChange});window.fixturePanel=panel;return true;};
+window.restoreFixtureCalculator=saved=>{calculator=new ModelCalculator('cg50',saved);};window.saveFixtureCalculator=()=>calculator.save();
+window.destroyFixture=()=>{panel?.destroy();panel=null;};
+window.fixtureReady=true;
+</script></body></html>

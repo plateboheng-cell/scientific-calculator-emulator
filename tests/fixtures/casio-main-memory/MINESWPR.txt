@@ -1,0 +1,254 @@
+'ProgramMode:RUN
+Locate 7,1,"MINESWEPER"
+Locate 1,7,"_@E74D__@E761__@E764__@E765_ _@E762__@E779_ _@E761__@E762__@E770__@E770__@E762__@E764_"
+
+Locate 3,3,"_#E5ED_Play _#E69B_"
+Locate 4,4,"Mines:_#E690_  _#E691_"
+Locate 3,5,"_#E5AF_Use:flag_->_0//dig_->_EXE"
+Locate 8,6,"move_->__#E5E8_,_#E5E9_,_#E5EA_,_#E5EB_"
+
+0->P
+
+M>99 Or M<1=>16->M
+
+
+Locate 11,4,M
+
+0->S
+
+Do
+
+Do
+Getkey->K
+LpWhile K=0
+
+K=28=>S-1->S
+K=37=>S+1->S
+S<0=>1->S
+S>1=>0->S
+
+If S=0
+Then Locate 3,3,"_#E5ED_"
+Locate 3,4," "
+IfEnd
+
+If S=1
+Then Locate 3,3," "
+Locate 3,4,"_#E5ED_"
+IfEnd
+
+S=1 And K=27 And M<99=>M+1->M
+S=1 And K=38 And M>1=>M-1->M
+Locate 11,4,"  "
+Locate 11,4,M
+
+
+(K=31 Or K=71 Or K=27) And S=0=>1->P
+
+Do
+Getkey->K
+LpWhile K<>0
+
+LpWhile P<>1
+
+ClrMat M
+ClrMat T
+{6,21}->Dim Mat M
+{6,21}->Dim Mat T
+
+0->F
+0->N
+
+0->P
+
+1->X
+1->Y
+
+For 1->I To 6
+Locate 1,I,"_#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5_"
+Next
+
+Locate X,Y,"_#E6A6_"
+Locate 1,7,"Select start(_#E5E8__#E5E9__#E5EA__#E5EB_EXE)"
+
+
+While 1=1
+
+Do
+Getkey->K
+LpWhile K=0
+
+Lbl 2
+
+If S=1
+Then 
+
+If K=71
+Then 
+If Mat T[Y,X]=0
+Then F+1->F
+(-)1->Mat T[Y,X]
+Else 
+If Mat T[Y,X]=(-)1
+Then F-1->F
+0->Mat T[Y,X]
+IfEnd
+IfEnd
+IfEnd
+
+If K=31 And Mat T[Y,X]=0
+Then 1->Mat T[Y,X]
+N+1->N
+Mat M[Y,X]=0=>Goto 3
+Lbl 4
+IfEnd
+
+Locate 7,7,"   "
+Locate 7,7,F
+
+IfEnd
+
+If K=27 Or K=28 Or K=37 Or K=38
+Then Mat T[Y,X]=0=>Locate X,Y,"_#E6A5_"
+Mat T[Y,X]=(-)1=>Locate X,Y,"_#E5A7_"
+Mat T[Y,X]=1 And Mat M[Y,X]=0=>Locate X,Y," "
+Mat T[Y,X]=1 And Mat M[Y,X]<>0=>Locate X,Y,Mat M[Y,X]
+IfEnd
+
+K=27 And X<21=>X+1->X
+K=38 And X>1=>X-1->X
+K=37 And Y<6=>Y+1->Y
+K=28 And Y>1=>Y-1->Y
+
+Mat T[Y,X]=(-)1=>Locate X,Y,"_#E6AE_"
+Mat T[Y,X]=0=>Locate X,Y,"_#E6A6_"
+If Mat T[Y,X]=1
+Then 
+Mat M[Y,X]=0=>Locate X,Y,"_#E6A3_"
+Mat M[Y,X]=1=>Locate X,Y,"_#E5F0_"
+Mat M[Y,X]=2=>Locate X,Y,"_#E5F1_"
+Mat M[Y,X]=3=>Locate X,Y,"_#E5F2_"
+Mat M[Y,X]=4=>Locate X,Y,"_#E5F3_"
+Mat M[Y,X]=5=>Locate X,Y,"_#E5F4_"
+Mat M[Y,X]=6=>Locate X,Y,"_#E5F5_"
+Mat M[Y,X]=7=>Locate X,Y,"_#E5FB_"
+Mat M[Y,X]=8=>Locate X,Y,"_#E5FC_"
+Mat M[Y,X]=9=>Locate X,Y,"_#E6A0_"
+IfEnd
+
+K=31 And S=0=>Goto 1
+
+Do
+Getkey->K
+LpWhile K=71 Or K=31
+
+N+M=126=>Goto 5
+Mat T[Y,X]=1 And Mat M[Y,X]=9=>Goto 5
+
+WhileEnd
+
+Lbl 1
+1->S
+Locate 1,7,"Generating level...  "
+
+For 1->I To M Step 1
+Do
+RanInt#(1,21)->A
+RanInt#(1,6)->B
+LpWhile ((A>X-2 And A<X+2) And (B>Y-2 And B<Y+2)) Or Mat M[B,A]=9
+
+9->Mat M[B,A]
+
+For A-1->V To A+1 Step 1
+For B-1->W To B+1
+V>=1 And V<=21 And W>=1 And W<=6 And (V<>A Or W<>B)=>Mat M[W,V]<>9=>Mat M[W,V]+1->Mat M[W,V]
+Next
+Next
+
+Next
+
+For 1->W To 6 Step 1
+Locate 1,W,"_#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5__#E6A5_"
+Next
+
+Locate X,Y,"_#E6A6_"
+Locate 1,7,"Flags:      Mines:   "
+Locate 19,7,M
+Locate 7,7,F
+
+Goto 2
+
+
+Lbl 3
+
+ClrList1
+ClrList2
+
+1->C
+1->D
+X->List 1[C]
+Y->List 2[C]
+
+Do
+
+List 1[C]->A
+List 2[C]->B
+
+For A-1->I To A+1
+For B-1->J To B+1
+
+If I>0 And I<22 And J>0 And J<7 And (I<>A Or J<>B)
+Then 
+If Mat T[J,I]=0
+Then 
+
+Mat M[J,I]=0=>Locate I,J," "
+Mat M[J,I]<>0=>Locate I,J,Mat M[J,I]
+
+If Mat M[J,I]=0
+Then 
+I->List 1[(Dim List 1)+1]
+J->List 2[(Dim List 2)+1]
+1+D->D
+IfEnd
+
+1->Mat T[J,I]
+N+1->N
+
+IfEnd
+IfEnd
+
+Next
+Next
+
+C+1->C
+LpWhile C<=D
+
+Goto 4
+
+Lbl 5
+
+If Mat M[Y,X]=9 And Mat T[Y,X]=1
+Then Locate 1,7,"You blew up :(       "
+Else 
+Locate 1,7,"Terrain cleared :)   "
+IfEnd
+
+Mat T[Y,X]=1 And Mat M[Y,X]=0=>Locate X,Y," "
+For 1->I To 6
+For 1->J To 21
+(X<>J Or Y<>I) And Mat M[I,J]=9=>Locate J,I,"_#E5AF_"
+If Mat T[I,J]=(-)1
+Then 
+Mat M[I,J]=0=>Locate J,I,"_#E6A3_"
+Mat M[I,J]=1=>Locate J,I,"_#E5F0_"
+Mat M[I,J]=2=>Locate J,I,"_#E5F1_"
+Mat M[I,J]=3=>Locate J,I,"_#E5F2_"
+Mat M[I,J]=4=>Locate J,I,"_#E5F3_"
+Mat M[I,J]=5=>Locate J,I,"_#E5F4_"
+Mat M[I,J]=6=>Locate J,I,"_#E5F5_"
+Mat M[I,J]=7=>Locate J,I,"_#E5FB_"
+Mat M[I,J]=8=>Locate J,I,"_#E5FC_"
+IfEnd
+Next
+Next

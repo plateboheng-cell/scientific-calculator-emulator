@@ -1,0 +1,4 @@
+.model-cg .screen-rim.cg-examination{outline:3px solid #00a744;outline-offset:-3px}
+#cg-exam-ind{margin-left:auto;color:#005c25;animation:cg-exam-flash 1s steps(2,start) infinite}
+@keyframes cg-exam-flash{to{visibility:hidden}}
+@media (prefers-reduced-motion:reduce){#cg-exam-ind{animation:none}}

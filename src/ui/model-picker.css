@@ -1,0 +1,53 @@
+/* Product library only. Device controls and calculator LCD styles are untouched. */
+#model-picker{--picker-ink:#edf2f7;--picker-muted:#a5b0bd;--picker-accent:#a1d6be;width:min(1000px,calc(100vw - 28px));max-width:none;max-height:calc(100dvh - 28px);padding:0;background:#161d26;color:var(--picker-ink);border:1px solid #52617470;border-radius:22px;box-shadow:0 30px 110px #000a,0 1px 0 #ffffff0a inset;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#526374 #161d26;color-scheme:dark;text-align:left;font:13px/1.5 'Segoe UI','Microsoft YaHei',sans-serif}
+#model-picker::backdrop{background:#080c12bf;backdrop-filter:blur(10px)}
+#model-picker .picker-top{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:18px 26px;background:#161d26f5;border-bottom:1px solid #ffffff0a;color:#f0f4f8;letter-spacing:.2px;gap:15px}
+#model-picker .picker-brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1;font-weight:650;font-size:13px;line-height:1.35;white-space:normal}
+#model-picker .picker-brand-symbol{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:9px;background:#a1d6be1a;border:1px solid #a1d6be40;color:var(--picker-accent);font:21px Georgia,serif}
+#model-picker .picker-brand-name{min-width:0;overflow-wrap:anywhere}
+#model-picker .picker-brand-word{font-weight:400;color:#b5c1cf;margin-left:3px}
+#model-picker [data-picker-language]{display:flex;align-items:center;gap:5px;float:none;flex:none;padding:6px 10px;background:#273340;color:#dde7f0;border:1px solid #586b7c5c;border-radius:8px;font-size:12px;line-height:1.4;white-space:nowrap}
+#model-picker .picker-heading{padding:26px 28px 20px}
+#model-picker .picker-eyebrow{font-size:10px;line-height:1.5;font-weight:650;letter-spacing:2px;color:var(--picker-accent);margin:0 0 10px}
+#model-picker h1{font-size:clamp(25px,4vw,34px);line-height:1.25;font-weight:650;letter-spacing:-.8px;margin:0 0 9px;color:#f0f5fa}
+#model-picker .picker-intro{font-size:13px;line-height:1.6;color:var(--picker-muted);margin:0}
+#model-picker .picker-library-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;margin-top:16px;color:#8e9fae;font-size:11px}
+#model-picker .picker-library-meta>span{display:inline-flex;align-items:center;gap:6px}
+#model-picker .picker-library-meta i{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--picker-accent);box-shadow:0 0 7px #a1d6be38}
+#model-picker .model-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:0 22px 22px}
+#model-picker .model-card{display:grid;grid-template-columns:135px minmax(0,1fr);align-items:stretch;gap:0;position:relative;overflow:hidden;width:100%;min-width:0;min-height:253px;padding:0;text-align:left;float:none;border:1px solid #495c6d65;border-radius:14px;background:#1c2732;color:#edf2f7;box-shadow:0 2px 5px #0001;transition:border-color .16s ease,background .16s ease,box-shadow .16s ease}
+#model-picker .model-card:not(:disabled):hover{background:#22313d;border-color:#8aa9b1;box-shadow:0 7px 22px #080c1226}
+#model-picker .model-card.is-current{border-color:#a1d6be9c;background:#20332f}
+#model-picker .model-card:disabled{background:#19222c;border-color:#3e4e5e65;color:#9eacbb;cursor:default}
+#model-picker .model-card:focus-visible,#model-picker [data-picker-language]:focus-visible,#model-picker [data-picker-close]:focus-visible{outline:3px solid var(--picker-accent);outline-offset:3px}
+#model-picker .model-card-visual{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;padding:17px 10px;background:radial-gradient(ellipse at 50% 40%,#72929e21,transparent 73%);border-right:1px solid #ffffff07}
+#model-picker .model-preview{display:flex;align-items:center;justify-content:center;width:100%;height:216px;pointer-events:none;user-select:none;filter:drop-shadow(3px 8px 7px #0007)}
+#model-picker .model-preview svg{display:block;width:auto;height:100%;max-width:100%;overflow:visible;font-family:Arial,'Microsoft YaHei',sans-serif}
+#model-picker .model-preview-planned{filter:none;color:#6c7c8b;text-align:center;font-size:20px;font-weight:650;letter-spacing:-1px;overflow-wrap:anywhere}
+#model-picker .model-preview-planned>span{padding:12px 7px;border:1px dashed #54667866;border-radius:12px}
+#model-picker .model-active-dot{position:absolute;top:12px;left:12px;display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:#a1d6be;color:#18332b;font-size:12px;font-weight:750}
+#model-picker .model-card-details{display:flex;flex-direction:column;gap:9px;min-width:0;padding:18px 16px 15px}
+#model-picker .model-card-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px;min-width:0}
+#model-picker .model-maker{color:#8ea3b2;font-size:10px;letter-spacing:.2px;line-height:1.6}
+#model-picker .model-status{display:inline-block;flex:none;border-radius:5px;padding:2px 5px;background:#57657735;color:#a8b5c1;font-size:9px;line-height:1.4;letter-spacing:.1px;white-space:nowrap}
+#model-picker .model-status.available{background:#3a695747;color:#b2dfc4}
+#model-picker .model-status.experimental{background:#735c343d;color:#d9c294}
+#model-picker .model-card-name{display:block;font-size:17px;font-weight:650;letter-spacing:-.4px;line-height:1.3;color:#f0f4f7;overflow-wrap:anywhere}
+#model-picker .model-card:disabled .model-card-name{color:#acbac8}
+#model-picker .model-summary{display:block;font-size:11px;line-height:1.65;color:#c3ced8}
+#model-picker .model-coverage{display:block;font-size:10px;line-height:1.6;color:#91a2b1}
+#model-picker .model-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:auto;padding-top:8px;font-size:10px;color:#abc9c3}
+#model-picker .current-model{font-size:10px;color:#b0e5cb}
+#model-picker .model-open-label{font-size:10px;color:#a9bdcd}
+#model-picker .model-open-arrow{color:#b2ccc6;font-size:17px;line-height:1}
+#model-picker .model-card:disabled .model-summary,#model-picker .model-card:disabled .model-coverage,#model-picker .model-card:disabled .model-open-label{color:#7e8d9e}
+#model-picker .picker-footer{border-top:1px solid #ffffff0b;padding:16px 26px 19px;background:#141b23}
+#model-picker .picker-note{display:flex;align-items:flex-start;gap:9px;margin:0;color:#8f9fae;font-size:10px;line-height:1.75}
+#model-picker .picker-note-icon{color:#a6c9bc;flex:none;font-size:17px;line-height:1.15}
+#model-picker .picker-cancel{display:flex;align-items:center;justify-content:center;gap:12px;float:none;width:100%;margin-top:15px;padding:10px 14px;border-radius:9px;border:1px solid #495e7060;background:#253441;color:#dce8f0;font-size:12px;line-height:1.5}
+#model-picker .picker-cancel:hover,#model-picker [data-picker-language]:hover{background:#334858}
+#model-picker .picker-cancel>span{font-size:16px;color:#97acbb;line-height:1}
+@media(min-width:1100px){#model-picker .model-cards{grid-template-columns:repeat(3,minmax(0,1fr))}#model-picker .model-card{grid-template-columns:109px minmax(0,1fr)}#model-picker .model-card-details{padding:16px 12px 14px}#model-picker .model-preview{height:205px}#model-picker .model-card-name{font-size:16px}}
+@media(max-width:660px){#model-picker .model-cards{grid-template-columns:minmax(0,1fr);padding:0 17px 18px;gap:11px}#model-picker .model-card{grid-template-columns:126px minmax(0,1fr);min-height:226px}#model-picker .model-preview{height:198px}#model-picker .model-card-visual{padding:13px 8px}#model-picker .picker-top{padding:15px 21px}#model-picker .picker-heading{padding:22px 23px 18px}#model-picker .picker-footer{padding:16px 22px 19px}}
+@media(max-width:360px){#model-picker{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:16px}#model-picker .picker-brand-word{display:none}#model-picker .model-cards{padding-left:11px;padding-right:11px}#model-picker .model-card{grid-template-columns:100px minmax(0,1fr)}#model-picker .model-card-details{padding:14px 11px 13px;gap:7px}#model-picker .model-preview{height:190px}#model-picker .model-card-name{font-size:16px}#model-picker .picker-top{padding:12px 17px}#model-picker .picker-heading{padding:20px 17px 17px}#model-picker .picker-footer{padding:14px 17px}}
+@media(prefers-reduced-motion:reduce){#model-picker .model-card{transition:none}}

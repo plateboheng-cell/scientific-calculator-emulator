@@ -1,0 +1,8 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Native CG Mat/Vct editor</title><style>body{margin:15px;background:#dfe4e9}#host{width:320px;height:177px;padding:3px;background:white;box-sizing:content-box}</style></head><body><div id="host"></div><script type="module">
+import {ModelCalculator} from '/src/engine/model-calculator.js';
+import {createCGArrayPanel} from '/src/ui/cg-array-panel.js';
+let panel,calculator,matrices={},vectors={},csvSettings={},changes=0,back=0;
+window.fixtureArray={mount(value={}){panel?.destroy();matrices=structuredClone(value.matrices||{});vectors=structuredClone(value.vectors||{});csvSettings=structuredClone(value.csvSettings||{});calculator=new ModelCalculator('cg50',{nativeAnswers:value.answers||{}});calculator.assign('Ans',17);calculator.examination=value.examination===true;panel=createCGArrayPanel({host:document.getElementById('host'),calculator,matrices,vectors,complex:value.complex===true,csvSettings,uiState:value.uiState||{},scope:()=>value.scope||{},onChange:value=>{matrices=value.matrices;vectors=value.vectors;csvSettings=value.csvSettings;changes++;},onBack:()=>back++});},action:value=>panel.handleAction(value),insert:value=>panel.insert(value),uiState:()=>panel.getState(),snapshot:()=>JSON.parse(JSON.stringify({matrices,vectors,csvSettings,answers:calculator.nativeAnswers||{},Ans:calculator.vars.Ans})),changes:()=>changes,back:()=>back,destroy:()=>panel.destroy()};
+document.addEventListener('keydown',event=>{if(panel?.handleKey(event)){event.preventDefault();return;}if(/^F[1-6]$/.test(event.key)){event.preventDefault();panel.handleAction('cg-f'+event.key.slice(1));}});
+window.fixtureArray.mount();window.fixtureReady=true;
+</script></body></html>

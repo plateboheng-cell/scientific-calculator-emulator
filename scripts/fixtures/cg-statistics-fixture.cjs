@@ -1,0 +1,5 @@
+const {app,BrowserWindow}=require('electron');
+const fs=require('node:fs'),path=require('node:path');
+let window;
+app.whenReady().then(()=>{const evidence=path.resolve(__dirname,'../../.verification'),directory=path.join(evidence,'cg-statistics-downloads');if(!directory.startsWith(evidence+path.sep))throw Error('Download directory escaped evidence');fs.mkdirSync(directory,{recursive:true});app.defaultSession;const {session}=require('electron');session.defaultSession.on('will-download',(_event,item)=>{const file=path.join(directory,Date.now()+'-'+path.basename(item.getFilename()));item.setSavePath(file);item.once('done',(_event,state)=>{globalThis.cgStatisticsLastDownload={file,state};});});window=new BrowserWindow({width:430,height:330,webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true},autoHideMenuBar:true});if(process.env.CG_STAT_TEST_FILE)window.loadFile(process.env.CG_STAT_TEST_FILE);else window.loadURL(process.env.CG_STAT_TEST_URL||'http://127.0.0.1:5208/scripts/fixtures/cg-statistics-fixture.html');});
+app.on('window-all-closed',()=>app.quit());

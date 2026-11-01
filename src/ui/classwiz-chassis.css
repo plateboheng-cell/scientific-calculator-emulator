@@ -1,0 +1,62 @@
+/* Original CSS shell and controls based on the X/EX front photographs.
+   Product names identify references; no application branding is printed on devices. */
+html,body{overflow:clip}
+body{background:radial-gradient(ellipse at 50% 22%,#242e3c,#111720 65%,#0c1119)}
+.calculator.model-x,.calculator.model-ex{width:350px;padding:16px 15px 22px;border:3px solid #aeb1ae;border-radius:39px 39px 43px 43px;background:repeating-linear-gradient(45deg,#ffffff04 0 2px,#00000008 2px 4px),repeating-linear-gradient(-45deg,#202321 0 3px,#2c2f2d 3px 6px);box-shadow:inset 0 0 0 2px #555b57,inset 0 -8px 5px #131614,0 20px 60px #0008;transform:scale(var(--model-scale,1));transform-origin:center}
+.classwiz-model-header{height:92px;position:relative;padding:4px 4px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.classwiz-identity{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;padding-top:2px}
+.classwiz-project-mark{height:23.1px}
+.cw-project-mark:empty{height:23px}
+.classwiz-model-header .model{font:12px/1.2 Arial,sans-serif;letter-spacing:0;color:#d8ded9;white-space:nowrap}
+.classwiz-wordmark{font:11px/1.4 Arial,sans-serif;letter-spacing:2.5px;color:#d06f88}
+.classwiz-model-header .solar{height:64px;width:136px;border:3px solid #151716;border-radius:9px;background:repeating-linear-gradient(90deg,#301e22 0,#301e22 30px,#161718 31px,#453236 32px);box-shadow:inset 0 1px 3px #000,0 1px 0 #525652;flex-shrink:0}
+.model-ex .screen-rim{--lcd:#c8d9cd;--ink:#14261c}
+.model-x .screen-rim,.model-ex .screen-rim{border:7px solid #171b18;border-radius:9px;box-shadow:0 1px 0 #646d65,inset 0 0 4px #1f2b2350}
+.model-x .status,.model-ex .status{height:16px;font-size:9px;padding:0 3px;gap:7px}
+.model-x .lcd,.model-ex .lcd{height:128px;padding:4px 5px 5px;font-size:13px}
+.model-x .lcd math-field.entry,.model-ex .lcd math-field.entry{font-size:23px;min-height:49px}
+.model-x .answer,.model-ex .answer{font-size:23px}
+.model-x .foot,.model-ex .foot{position:absolute;left:0;right:0;bottom:-34px;margin:0;padding:0 4px;gap:6px}
+.model-x .foot button,.model-ex .foot button{color:#aab5c2;font-size:9px}
+.physical-classwiz .classwiz-controls{display:grid;grid-template-columns:minmax(0,1fr) 110px minmax(0,1fr);gap:6px;align-items:start;margin:22px 0 6px;height:94px}
+.classwiz-controls .side-controls{padding-top:0;gap:12px 7px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.classwiz-controls .small .key{height:25px;border-radius:5px;font-size:11px;background:linear-gradient(#3b403d,#252b28);box-shadow:inset 0 1px 1px #909b9270,0 2px 1px #090e0b;color:#eef1ed}
+.classwiz-controls .classwiz-round{padding-top:0}
+.classwiz-controls .classwiz-round .key{font-size:0;color:transparent;width:28px;height:28px;border-radius:50%;margin:0 auto;display:block;background:conic-gradient(from 25deg,#d1d8d3,#727a74,#d9e0d9,#6c766d,#d1d8d3);border:1px solid #1a211c;box-shadow:inset 0 1px 2px #f7fffab0,0 3px 3px #0009}
+.classwiz-round .secondary{display:none}
+.classwiz-control-caption{position:absolute;left:0;right:0;top:-14px;text-align:center;font:7px/11px Arial,sans-serif;white-space:nowrap;color:#c9cfc9}
+.classwiz-control-caption small{font:inherit;color:#e0bf6c;margin-left:2px}
+.classwiz-round:has([data-action=menu]) .classwiz-control-caption{font-size:6px}
+.classwiz-round:has([data-action=shift]) .classwiz-control-caption{color:#e0bf6c}
+.classwiz-round:has([data-action=alpha]) .classwiz-control-caption{color:#db7e98}
+.physical-classwiz .classwiz-nav{width:107px;height:78px;margin:0 auto;border-radius:50%;border:3px solid #101712;background:conic-gradient(from 40deg,#3c433e 0 8deg,#bfc9c0 12deg 74deg,#424b43 80deg 98deg,#a9b6aa 104deg 164deg,#39423b 170deg 188deg,#c6d1c7 194deg 254deg,#3b453d 260deg 278deg,#afbcb0 284deg 344deg,#3c433e 350deg);box-shadow:inset 0 1px 3px #e3eee6,0 3px 4px #0009}
+.physical-classwiz .classwiz-nav:before{inset:24px 37px;border-radius:5px;transform:rotate(45deg);background:#171d18;border:1px solid #657066}
+.classwiz-nav button{color:#404a43;font-size:9px;width:29px;height:23px}
+.classwiz-nav .up{top:0;left:36px}.classwiz-nav .down{bottom:0;left:36px}.classwiz-nav .left{top:24px;left:0}.classwiz-nav .right{top:24px;right:0}
+.classwiz-science{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px 7px}
+.classwiz-science .key-wrap{padding-top:13px}
+.classwiz-science .key{height:27px;font-size:16px;background:linear-gradient(#414944,#262f29);border-radius:5px;box-shadow:inset 0 1px 1px #b5c5b44d,0 2px 2px #000a}
+.classwiz-science .key-wrap:nth-child(5) .key,.classwiz-science .key-wrap:nth-child(7) .key,.classwiz-science .key-wrap:nth-child(8) .key{font-size:14px}
+.classwiz-science .secondary{font:8px/11px Arial,sans-serif}
+.classwiz-science .base-legend{color:#6aa7cf;font:7px/11px Arial,sans-serif}
+.classwiz-science .fraction-key-symbol{height:21px;width:18px}
+.classwiz-digits{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px 9px;margin-top:8px}
+.classwiz-digits .key-wrap{padding-top:13px}
+.classwiz-digits .key{height:34px;background:linear-gradient(#f0f1eb,#cad1c9);color:#18221a;font:24px/1 Arial,sans-serif;border-radius:4px;box-shadow:inset 0 1px 0 #fff,0 3px 1px #111a12}
+.classwiz-digits .secondary{font:8px/11px Arial,sans-serif}
+.classwiz-digits .blue .key{background:linear-gradient(#487cac,#2e5c8b);font-size:17px;color:#f4f8ff;box-shadow:inset 0 1px 0 #b5d7f480,0 3px 1px #0b1c2a}
+.classwiz-digits .compact .key{font-size:16px}
+.classwiz-menu-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:43px 43px;gap:2px 5px;padding:3px 3px 0}
+.classwiz-menu-grid .mode-tile{position:relative;display:flex;justify-content:center;align-items:center;padding:1px 8px 1px 1px;min-height:0;height:43px;border:0;border-radius:0;background:transparent;color:var(--ink)}
+.classwiz-menu-grid .mode-tile.selected{background:var(--ink);color:var(--lcd)}
+.classwiz-menu-grid svg{height:34px;width:35px;fill:none;stroke:currentColor;stroke-width:2}
+.classwiz-menu-grid svg text{fill:currentColor;stroke:none;font:13px/1 Consolas,monospace}
+.classwiz-menu-number{position:absolute;right:0;bottom:-1px;padding:0 1px;background:var(--lcd);color:var(--ink);font:bold 10px/13px Consolas,monospace}
+.classwiz-menu-footer{display:flex;align-items:center;gap:2px;padding:3px 2px 0;font:16px/1.2 Consolas,'Microsoft YaHei',monospace;white-space:nowrap;overflow:hidden}
+.classwiz-menu-page{margin-left:auto;font-size:10px}
+#stat-capacity{font-size:10px;white-space:nowrap;margin-left:auto}
+.grid-actions{flex-wrap:wrap;gap:5px}
+.model-x:has(.classwiz-menu-grid) .status,.model-ex:has(.classwiz-menu-grid) .status{display:none}
+.model-x .lcd:has(.classwiz-menu-grid),.model-ex .lcd:has(.classwiz-menu-grid){height:144px;overflow:hidden}
+.expanded .model-x .lcd,.expanded .model-ex .lcd{height:250px}
+.expanded .model-x .lcd:has(.classwiz-menu-grid),.expanded .model-ex .lcd:has(.classwiz-menu-grid){height:266px}

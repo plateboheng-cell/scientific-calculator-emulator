@@ -1,0 +1,4 @@
+.qr-panel{display:flex;flex-direction:column;align-items:center;gap:4px;font:11px/1.4 'Segoe UI','Microsoft YaHei',sans-serif;padding:2px 0 5px;color:var(--ink)}
+.qr-panel>strong{font-size:11px}.qr-image{width:128px;line-height:0;background:#fff;border-radius:2px}.qr-image svg{display:block;width:100%;height:auto;image-rendering:pixelated}
+.qr-footer{display:flex;align-items:center;gap:9px;justify-content:center}.qr-footer button{float:none;font:10px/1.2 inherit;padding:3px 6px;background:transparent;color:inherit;border:1px solid currentColor;border-radius:3px}.qr-footer span{font:10px monospace}.qr-panel>small{font-size:9px;text-align:center;max-width:100%}.qr-panel details{width:100%;font-size:9px}.qr-panel pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:9px;margin:4px 0}
+body.expanded .qr-image{width:220px}

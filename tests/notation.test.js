@@ -1,8 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {latexToExpression} from '../src/engine/notation.js';
+import {latexToExpression,expressionToLatex} from '../src/engine/notation.js';
 import {Calculator,math} from '../src/engine/calculator.js';
 const calc=new Calculator();
+test('saved calculator variables round trip as symbols instead of physical units',()=>{
+  for(const variable of ['A','H','T','m']){const expr=latexToExpression(expressionToLatex('2*cos('+variable+')'));assert.ok(Math.abs(calc.evaluate(expr,{[variable]:60})-1)<1e-12);}
+});
+test('TI combination template preserves both operands',()=>{assert.equal(calc.evaluate(latexToExpression(String.raw`\binom{52}{5}`)),2598960);});
+test('TI permutation template preserves both operands',()=>{assert.equal(calc.evaluate(latexToExpression(String.raw`\operatorname{nPr}\left(5,3\right)`)),60);});
+test('TI vector aliases preserve cross-product notation',()=>{const expression=latexToExpression(String.raw`\vec{u}\times\vec{v}`,{mode:'vector',aliases:{u:'VctA',v:'VctB'}});assert.equal(expression,'cross(VctA,VctB)');const value=calc.evaluate(expression,{VctA:[1,2,3],VctB:[4,5,6]});assert.deepEqual(math.isMatrix(value)?value.toArray():value,[-3,6,-3]);});
 for(const [latex,expected]of [
  ['\\frac{1}{3}',1/3],['\\sqrt{2}',Math.sqrt(2)],['\\sqrt[3]{8}',2],['2^{3}',8],['\\log_2(8)',3],['\\log_3(9)',2],['\\ln(e)',1],
  ['\\sin(30)',.5],['\\cos(60)',.5],['\\arcsin(0.5)',30],['\\left| -3\\right|',3],['5!',120],['2\\pi',2*Math.PI],

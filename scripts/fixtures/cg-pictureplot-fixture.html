@@ -1,0 +1,7 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><style>*{box-sizing:border-box}html,body{margin:0;width:340px;height:177px;overflow:hidden}#host{width:340px;height:177px;font:10px Arial;background:white}</style></head><body><section id="host"></section><script type="module">
+import {ModelCalculator} from '/src/engine/model-calculator.js';
+import {createCGPicturePlotPanel} from '/src/ui/cg-pictureplot-panel.js';
+window.calculator=new ModelCalculator('cg50');window.fixtureErrors=[];window.addEventListener('error',event=>window.fixtureErrors.push(event.message));
+window.mountPicture=(data={},lists=Array.from({length:26},()=>[]),graph={expressions:['x^2'],types:['y'],enabled:[true]})=>{window.panel?.destroy();window.fixtureLists=lists;window.fixtureGraph=graph;window.fixtureWrites=0;window.panel=createCGPicturePlotPanel({host:document.getElementById('host'),calculator:window.calculator,data,lists,graph,onChange:value=>{window.fixtureState=value;window.fixtureWrites++;},onListsChange:value=>{window.fixtureLists=value;},onGraphChange:value=>{window.fixtureGraph=value;},onPicture:value=>{window.fixturePicture=value;}});};
+window.fixtureReady=true;
+</script></body></html>
