@@ -126,7 +126,7 @@ jobs:
           if ($env:RESULT -ne 'success') {
             'Windows validation or packaging did not complete successfully. This run must not be treated as a usable Windows release. Inspect failed steps and windows-evidence.' | Out-File -Append $env:GITHUB_STEP_SUMMARY
           }
-          'Artifacts are CI build outputs only. This workflow does not create tags or public GitHub Releases.' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          'The release job runs only for the designated release commit after both validation jobs succeed.' | Out-File -Append $env:GITHUB_STEP_SUMMARY
       - uses: actions/upload-artifact@v4
         if: always()
         with:

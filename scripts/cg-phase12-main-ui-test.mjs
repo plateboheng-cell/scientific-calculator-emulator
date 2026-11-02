@@ -62,7 +62,7 @@ try{
     await calculate('\\frac{1}{4}');await simpMenu();await soft(3);await key('execute').click();await noError();await fraction(1,4);assert.equal(await page.locator('.cg-simp-factor').count(),0);
   });
   await check('physical store arrow and ALPHA A retain the Manual exact fraction in a scalar register',async()=>{
-    await calculate('\\frac{15}{60}');await key('cg-store-arrow').click();await key('alpha').click();await key('x').click();await key('execute').click();await noError();
+    await calculate('\\frac{15}{60}');await page.evaluate(()=>document.activeElement?.blur());await key('cg-store-arrow').click();await key('alpha').click();await key('x').click();await key('execute').click();await noError();
     const state=await saved();assert.equal(state.calculator.vars.A,.25);assert.deepEqual(state.calculator.exactVariables.A,carrier(15,60));assert.deepEqual(state.calculator.exactAnswer,carrier(15,60));
   });
   await check('a real Electron close and restart preserve Manual, exact Ans and the stored fraction',async()=>{
