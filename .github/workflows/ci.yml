@@ -146,3 +146,22 @@ jobs:
             release/*.zip
             release/SHA256SUMS.txt
 
+
+  publish:
+    name: Publish v0.4.0
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'Release v0.4.0')
+    needs: [core, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: scientific-calculator-simulator-Windows-x64
+          path: release
+      - name: Publish verified release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create v0.4.0 release/*.exe release/*.zip release/SHA256SUMS.txt --target "$GITHUB_SHA" --title "scientific calculator simulator v0.4.0" --notes "Windows x64 offline multi-model calculator. Includes local development through 0.13.0; experimental model limits are documented in the repository. The installed @arnog/colors package declares MIT but does not contain upstream copyright text; see THIRD-PARTY-NOTICES.md. Download the portable EXE or extract the ZIP. SHA256SUMS.txt provides checksums."

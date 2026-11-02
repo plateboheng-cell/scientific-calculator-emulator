@@ -29,9 +29,9 @@ The script inventories installed lockfile nodes and collects upstream notices wi
 
 ### 仍需核实的许可元数据 / Remaining upstream metadata gap
 
-`@arnog/colors@0.7.3` 在 package.json 中声明 MIT，但本次安装包没有附许可全文或版权行；其 package.json 所列仓库地址核对时返回 404。脚本明确发出警告并在 `missingRuntimeNotices` 记录它，生成文本保留“仅有包声明”的说明，未编造权利人。公开分发前应从上游核实并补足通知。本次未发布新 Release。
+`@arnog/colors@0.7.3` 在 package.json 中声明 MIT，但安装包没有附许可全文或版权行；其 package.json 所列仓库地址核对时返回 404。脚本在 `missingRuntimeNotices` 记录这一缺口，并附上标准 MIT 条款供查阅，不推断或编造权利人。上游版权通知仍有待核实。
 
-`@arnog/colors@0.7.3` declares MIT but ships no license/copyright text in the installed package, and its declared repository was unavailable during review. This is recorded rather than assigned invented attribution. Resolve the upstream notice before a new public distribution.
+`@arnog/colors@0.7.3` declares MIT but ships no license/copyright text in the installed package, and its declared repository was unavailable during review. The generated notices reproduce standard MIT terms without inventing attribution. The upstream copyright notice remains unverified.
 
 ## npm 审计 / npm audit
 

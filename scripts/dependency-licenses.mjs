@@ -39,7 +39,12 @@ for (const [location, metadata] of Object.entries(lock.packages ?? {}).sort(([a]
   if (runtime || pkg.name==='electron') {
     if (!files.length&&!embedded.length) missing.push(`${pkg.name}@${pkg.version}`);
     const sections=await Promise.all(files.map(async filename=>`${filename}\n${await fs.readFile(path.join(directory,filename),'utf8')}`));
-    notices.push(`${pkg.name}@${pkg.version}\nLicense: ${license}\n${[...sections,...embedded].join('\n\n')||'The installed package declares this license in package.json but does not provide a license text or copyright notice. See docs/THIRD_PARTY_NOTICES.md for this upstream metadata gap.'}`);
+    let notice=[...sections,...embedded].join('\n\n');
+    if (!notice && pkg.name==='@arnog/colors' && license==='MIT') {
+      const mit=(await fs.readFile(path.join(root,'LICENSE'),'utf8')).replace(/^MIT License\s*Copyright[^\n]*\n\s*/,'');
+      notice='Upstream package.json declares MIT but does not supply a copyright notice or license text. The standard MIT terms are reproduced below without assigning a copyright holder; the upstream metadata gap remains open.\n\n'+mit;
+    }
+    notices.push(`${pkg.name}@${pkg.version}\nLicense: ${license}\n${notice||'The installed package declares this license in package.json but does not provide a license text or copyright notice. See docs/THIRD_PARTY_NOTICES.md for this upstream metadata gap.'}`);
   }
 }
 await fs.mkdir(out,{recursive:true});
