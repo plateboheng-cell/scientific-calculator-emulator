@@ -38,7 +38,7 @@ function betaI(x,a,b){
   const scale=Math.exp(logGamma(a+b)-logGamma(a)-logGamma(b)+a*Math.log(x)+b*Math.log1p(-x));
   return clamp(x<(a+1)/(a+b+2)?scale*betaFraction(a,b,x)/a:1-scale*betaFraction(b,a,1-x)/b);
 }
-function normalTail(z){return gammaQ(.5,z*z/2)/2;}
+export function normalTail(z){return gammaQ(.5,z*z/2)/2;}
 function normalParameters(mu,sigma){assert(finite(mu)&&finite(sigma)&&sigma>0,'标准差须大于 0，参数须为有限实数');}
 export function normalPDF(x,mu=0,sigma=1){normalParameters(mu,sigma);assert(finite(x));const z=(x-mu)/sigma;const v=Math.exp(-z*z/2)/(Math.sqrt(2*Math.PI)*sigma);assert(finite(v),'结果超出数值范围');return v;}
 export function normalCDF(lower,upper,mu=0,sigma=1){

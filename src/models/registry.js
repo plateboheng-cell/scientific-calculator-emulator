@@ -31,7 +31,7 @@ const models = [
     modes:createModes(['calc','stat','table','equation','inequality','complex','base','matrix','vector','ratio']),
   },
   {
-    ...cwShared,id:'cn999cw',name:'fx-999CN CW',appearance:'white-cw',distribution:true,spreadsheet:true,
+    ...cwShared,id:'cn999cw',name:'fx-999CN CW',appearance:'white-cw',distribution:true,spreadsheet:true,nativeCw:true,statisticsCells:160,
     summary:{zh:'十二种应用 · 七种分布计算 · A1:E45 数据表格',en:'Twelve apps · seven distributions · A1:E45 spreadsheet'},
     coverage:{zh:'实验实现：官方手册示例已纳入测试，非完整固件仿真',en:'Experimental: manual examples tested; incomplete hardware parity'},
     modes:createModes(['calc','stat','distribution','spreadsheet','table','equation','inequality','complex','base','matrix','vector','ratio']),

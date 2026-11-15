@@ -148,8 +148,8 @@ jobs:
 
 
   publish:
-    name: Publish v0.4.0
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'Release v0.4.0')
+    name: Publish v0.4.9
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.head_commit.message == 'Release v0.4.9'
     needs: [core, windows]
     runs-on: ubuntu-latest
     permissions:
@@ -164,4 +164,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          gh release create v0.4.0 release/*.exe release/*.zip release/SHA256SUMS.txt --target "$GITHUB_SHA" --title "scientific calculator simulator v0.4.0" --notes "Windows x64 offline multi-model calculator. Includes local development through 0.13.0; experimental model limits are documented in the repository. The installed @arnog/colors package declares MIT but does not contain upstream copyright text; see THIRD-PARTY-NOTICES.md. Download the portable EXE or extract the ZIP. SHA256SUMS.txt provides checksums."
+          (cd release && sha256sum --check SHA256SUMS.txt)
+          cat > "$RUNNER_TEMP/release-notes.md" <<'NOTES'
+          Windows x64 离线版。可直接运行便携 EXE，也可解压 ZIP 后运行其中的程序。SHA256SUMS.txt 提供两个下载包的校验值。
+
+          - 第一代 fx-999CN CW 提供十二项应用、点阵 LCD 和按说明书编排的菜单。
+          - 支持的实数和复数计算保留 23 位有效数字。复数的实部和虚部可随 Ans 和变量保存。
+          - 分布支持直接计算小概率右尾。扩展工作表可保存和恢复 225 个单元格。
+          - 补齐模板跳转、撤消与重做、算式重放和长结果滚动。
+
+          fx-999CN CW 仍为实验性型号。当前支持范围见 [999 型号说明](https://github.com/plateboheng-cell/scientific-calculator-emulator/blob/v0.4.9/docs/999CW.md)。
+          NOTES
+          gh release create v0.4.9 release/*.exe release/*.zip release/SHA256SUMS.txt --target "$GITHUB_SHA" --title "scientific calculator simulator v0.4.9" --notes-file "$RUNNER_TEMP/release-notes.md" --latest

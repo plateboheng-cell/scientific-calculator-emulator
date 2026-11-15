@@ -17,7 +17,7 @@ app.whenReady().then(() => {
   if (process.env.CNX_TEST === '1' && process.env.CNX_TEST_SYSTEM_LANGUAGES) {
     languages = JSON.parse(process.env.CNX_TEST_SYSTEM_LANGUAGES);
   }
-  win = new BrowserWindow({ width: 420, height: Math.min(830, area.height), minWidth: 360, minHeight: 640, title: APP_NAME, backgroundColor: '#22252b', autoHideMenuBar: true, webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false, preload: path.join(__dirname, 'preload.cjs'), additionalArguments: ['--cnx-system-languages=' + JSON.stringify(languages)] } });
+  win = new BrowserWindow({ width: 420, height: Math.min(830, area.height), minWidth: 360, minHeight: 640, title: APP_NAME, backgroundColor: '#ecefe7', autoHideMenuBar: true, webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false, preload: path.join(__dirname, 'preload.cjs'), additionalArguments: ['--cnx-system-languages=' + JSON.stringify(languages)] } });
   const stateFile=createStateFile(app.getPath('userData'));
   ipcMain.on('simulator:state-load',event=>{event.returnValue=event.sender===win.webContents?stateFile.load():{ok:false,error:'Unknown state requester'};});
   ipcMain.on('simulator:state-save',(event,value)=>{event.returnValue=event.sender===win.webContents?stateFile.save(value):{ok:false,error:'Unknown state requester'};});

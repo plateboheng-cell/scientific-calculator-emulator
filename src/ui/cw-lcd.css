@@ -1,0 +1,179 @@
+@font-face {
+  font-family: "CNX LCD";
+  src: url("../assets/cw-lcd.woff") format("woff");
+  font-display: swap;
+}
+
+.white-cw .screen-rim {
+  container-type: inline-size;
+  /* Coordinate units of the first-generation manual's display illustrations. */
+  --cw-dot: calc(100cqw / 196);
+  --cw-lcd-font: "CNX LCD", SimSun, "Microsoft YaHei", monospace;
+  --cw-lcd-mid: color-mix(in srgb, var(--ink) 79%, var(--lcd));
+  --cw-lcd-light: color-mix(in srgb, var(--ink) 45%, var(--lcd));
+}
+
+.white-cw .status.cw-lcd-status {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: calc(9 * var(--cw-dot));
+  padding: 0;
+  color: var(--ink);
+  visibility: visible;
+}
+.cw-lcd-status svg { display: block; width: 100%; height: 100%; fill: currentColor; }
+.cw-lcd-status text { font: 8px "CNX LCD", monospace; }
+.cw-lcd-status .cw-lcd-angle-letter { font-size: 5px; }
+.cw-lcd-status [hidden] { display: none; }
+.white-cw:has(.cw-home-grid, .cw-data-menu, .cw-dist-menu, .cw-contrast) .cw-lcd-status svg,
+.white-cw.off .cw-lcd-status svg,
+.white-cw.off .lcd > * {
+  visibility: hidden;
+}
+.white-cw.off .lcd { visibility: visible; pointer-events: none; }
+
+.white-cw .lcd,
+.white-cw .lcd.calculation-screen {
+  height: calc(68 * var(--cw-dot));
+  padding: calc(2 * var(--cw-dot));
+  font-family: var(--cw-lcd-font);
+  font-synthesis: none;
+}
+.expanded .white-cw .lcd,
+.expanded .white-cw .lcd.calculation-screen { height: 210px; }
+.white-cw :is(.lcd,.cw-distribution) { scrollbar-width: auto; scrollbar-color: auto; }
+.white-cw :is(.lcd,.cw-distribution)::-webkit-scrollbar { width: calc(2 * var(--cw-dot)); height: calc(2 * var(--cw-dot)); }
+.white-cw :is(.lcd,.cw-distribution)::-webkit-scrollbar-button { display: none; }
+.white-cw :is(.lcd,.cw-distribution)::-webkit-scrollbar-thumb { background: var(--cw-lcd-mid); }
+.white-cw :is(.lcd,.cw-distribution)::-webkit-scrollbar-track { background: var(--lcd); }
+
+.white-cw .lcd:has(.cw-home-grid) { padding: calc(3 * var(--cw-dot)) calc(5 * var(--cw-dot)) 0 calc(2 * var(--cw-dot)); }
+.white-cw .cw-home-grid {
+  grid-template-rows: repeat(2, calc(31 * var(--cw-dot)));
+  gap: calc(2 * var(--cw-dot)) calc(4 * var(--cw-dot));
+  padding: 0;
+}
+.white-cw .cw-home-grid .mode-tile {
+  height: calc(31 * var(--cw-dot));
+  padding: 0;
+  color: var(--ink);
+}
+.white-cw .cw-home-grid .mode-tile.selected { background: var(--ink); color: var(--lcd); }
+.white-cw .cw-home-grid .mode-tile .symbol { width: calc(36 * var(--cw-dot)); height: calc(16 * var(--cw-dot)); }
+.white-cw .cw-home-grid .cw-lcd-home-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  stroke: none;
+}
+.white-cw .cw-lcd-home-icon text { font: 12px "CNX LCD", monospace; text-anchor: middle; }
+.white-cw .cw-lcd-home-icon .cw-lcd-icon-small { font-size: 8px; }
+.cw-lcd-home-icon .cw-lcd-mid { opacity: .79; }
+.cw-lcd-home-icon .cw-lcd-light { opacity: .45; }
+.white-cw .cw-home-grid .cw-home-label {
+  font-family: var(--cw-lcd-font);
+  font-size: calc(12 * var(--cw-dot));
+  line-height: calc(14 * var(--cw-dot));
+}
+:lang(en) .white-cw .cw-home-grid .cw-home-label { font-size: calc(7.5 * var(--cw-dot)); }
+.white-cw .cw-home-scroll {
+  right: calc(2 * var(--cw-dot));
+  top: calc(3 * var(--cw-dot));
+  bottom: auto;
+  width: calc(2 * var(--cw-dot));
+  height: calc(64 * var(--cw-dot));
+  background: transparent;
+}
+.white-cw .cw-home-scroll i { width: 100%; background: var(--cw-lcd-mid); }
+
+.white-cw .lcd .cw-data-menu .list-item,
+.white-cw .lcd .cw-dist-menu .list-item {
+  min-height: calc(16 * var(--cw-dot));
+  padding: 0 calc(2 * var(--cw-dot)) 0 0;
+  font: calc(12 * var(--cw-dot))/calc(15 * var(--cw-dot)) var(--cw-lcd-font);
+}
+.white-cw .lcd .list-item.selected { background: var(--ink); color: var(--lcd); }
+.white-cw .lcd .list-item.selected :is(.cw-menu-arrow, .cw-dist-arrow) { opacity: .55; }
+
+.white-cw .lcd math-field.entry { font-size: calc(16 * var(--cw-dot)); }
+.white-cw .lcd math-field.entry[data-cw-structured][data-cw-readout] {
+  font-size: calc(13.5 * var(--cw-dot));
+}
+.white-cw .lcd.calculation-screen { gap: calc(2 * var(--cw-dot)); }
+.white-cw .calculation-screen :is(#expression-host,#answer) { scrollbar-width: none; }
+.white-cw .lcd #entry { --caret-color: var(--ink); }
+.white-cw .lcd #entry[data-cw-readout] { caret-color: transparent; --caret-color: transparent; }
+.white-cw .calculation-screen #answer {
+  font-family: var(--cw-lcd-font);
+  font-size: calc(16 * var(--cw-dot));
+  line-height: 1.08;
+}
+.white-cw .calculation-screen { position: relative; }
+.cw-answer-content {
+  display: block;
+  min-width: 100%;
+  width: max-content;
+  text-align: right;
+  white-space: nowrap;
+}
+.white-cw .calculation-screen:has(.cw-base-mode) .cw-answer-content { white-space: pre; }
+.white-cw .calculation-screen[data-cw-answer-left]::before,
+.white-cw .calculation-screen[data-cw-answer-right]::after {
+  position: absolute;
+  bottom: calc(2 * var(--cw-dot));
+  z-index: 1;
+  padding: 0 calc(var(--cw-dot));
+  color: var(--ink);
+  background: var(--lcd);
+  font: calc(7 * var(--cw-dot))/1.3 var(--cw-lcd-font);
+  pointer-events: none;
+}
+.white-cw .calculation-screen[data-cw-answer-left]::before { content: '◀'; left: 0; }
+.white-cw .calculation-screen[data-cw-answer-right]::after { content: '▶'; right: 0; }
+.white-cw .lcd .katex,
+.white-cw .lcd .katex :is(.mathrm,.mainrm) { font-family: "CNX LCD", KaTeX_Main, serif; }
+.white-cw .lcd .katex .mathnormal { font-family: "CNX LCD", KaTeX_Math, serif; font-style: normal; }
+.cw-complex-lines { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.08; }
+.white-cw #answer:has(.cw-complex-lines) { font-size: calc(12 * var(--cw-dot)); }
+.white-cw .lcd .cw-line-entry,
+.white-cw .calculation-screen:has(.cw-base-mode) :is(#entry,#answer),
+.white-cw .lcd .cw-eng-indicator { font-family: var(--cw-lcd-font); }
+
+.white-cw .lcd :is(.cw-cell-viewport table, .cw-cell-viewport button, .cw-dist-table button, .cw-dist-table th),
+.white-cw .lcd :is(.sheet-grid th,.sheet-grid button, .cw-dist-entry, .cw-dist-param input),
+.white-cw .lcd :is(#sheet-entry,#cw-grid-entry),
+.white-cw .lcd :is(.cw-dist-type, .cw-dist-result, .cw-dist-param, .cw-values-row, .cw-page-title) {
+  font-family: var(--cw-lcd-font);
+}
+.white-cw .cw-native-sheet .sheet-grid th { background: var(--cw-lcd-mid); }
+.white-cw .cw-native-sheet .sheet-grid th.selected { background: var(--ink); }
+.white-cw .cw-dist-result { font-size: calc(16 * var(--cw-dot)); }
+.white-cw .cw-dist-result output { font-size: inherit; }
+.white-cw .lcd:has(.cw-dist-param) { padding-block: 0; }
+.white-cw .cw-distribution .cw-dist-type { line-height: calc(12 * var(--cw-dot)); }
+.white-cw .cw-dist-param {
+  grid-template-columns: calc(58 * var(--cw-dot)) auto minmax(0,1fr);
+  gap: calc(3 * var(--cw-dot));
+  min-height: calc(14 * var(--cw-dot));
+  padding-left: calc(12 * var(--cw-dot));
+}
+.white-cw .lcd .cw-dist-param input { height: calc(13 * var(--cw-dot)); }
+.white-cw .lcd .cw-dist-param.selected input::selection { background: transparent; color: inherit; }
+.white-cw .lcd .cw-distribution .run-button {
+  min-height: calc(14 * var(--cw-dot));
+  padding-block: 0;
+}
+.white-cw .cw-contrast {
+  padding: calc(5 * var(--cw-dot)) calc(3 * var(--cw-dot)) 0;
+}
+.white-cw .cw-contrast-scale {
+  height: calc(19 * var(--cw-dot));
+  margin-top: 0;
+  background: linear-gradient(to right, var(--lcd) 25%, var(--cw-lcd-light) 25% 50%, var(--cw-lcd-mid) 50% 75%, var(--ink) 75%);
+}
+.white-cw .cw-contrast-ends { margin-top: calc(7 * var(--cw-dot)); }
+.white-cw .cw-contrast-ends button { display: flex; flex-direction: column; align-items: flex-start; padding: 0; }
+.white-cw .cw-contrast-ends button:last-child { align-items: flex-end; }
+.white-cw .cw-contrast-ends .cw-contrast-arrow { font: calc(13 * var(--cw-dot))/1 var(--cw-lcd-font); }

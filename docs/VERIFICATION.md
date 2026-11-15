@@ -1,4 +1,113 @@
-# Verification record: 0.13.0 local Windows update
+# Local Windows verification
+
+## 0.4.9 fx-999CN CW editing and replay · deployed 2026-11-11
+
+The desktop shortcut opens the verified Windows x64 package. All 77 installed files matched the staged build by SHA-256. The previous build and both state files are in `release/desktop-backup-20261111-183016-before-v0.4.9`. The installed executable opened isolated copies of all six profiles and passed the manual replay example. Both live state files matched their backups afterward.
+
+| Check | Result | Evidence in `.verification/` |
+| --- | --- | --- |
+| Core | 956 passed | `999-049-core.log` |
+| Packaged 999 workflows | 76 passed | `999-049-packaged-ui.log` |
+| Packaged fraction layout | 10 passed | `999-049-packaged-fractions.log` |
+| Packaged native entry, usability and EX | 80 passed | `999-049-packaged-native.log`, `999-049-packaged-usability.log`, `999-049-packaged-ex.log` |
+| Installed executable and profile load | Passed | `999-049-asar.log`, `999-049-upgrade-profile.log`, `999-049-desktop-update.json`, `999-049-desktop-runtime.log` |
+
+The packaged tests check the manual's `4×3+2` replay to `4×3−7`, the square-root capture of the next fraction, and both template jumps. They verify that undo restores the denominator selection, that a second TOOLS Undo redoes the edit, and that long-result arrows, BACK and AC preserve the previous Ans until execution. [Editing and replay scope](999CW.md)
+
+## 0.4.8 fx-999CN CW complex input and precision · deployed 2026-11-10
+
+The existing desktop shortcut opens the verified Windows x64 package. All 77 installed files matched the staged build by SHA-256. The previous build and both state files are in `release/desktop-backup-20261110-184152-before-v0.4.8`. The installed executable opened isolated copies of all six profiles and evaluated the complex low-digit case. Both live state files matched their backups afterward.
+
+| Check | Result | Evidence in `.verification/` |
+| --- | --- | --- |
+| Core | 956 passed | `999-048-core-verified.log` |
+| Packaged 999 workflows | 71 passed | `999-048-release-ui.log` |
+| Packaged fraction layout | 10 passed | `999-048-release-fractions.log` |
+| Packaged native entry, usability and EX | 80 passed | `999-048-release-native.log`, `999-048-release-usability.log`, `999-048-release-ex.log` |
+| Package content and installed executable | Passed | `999-048-asar-final.log`, `999-048-desktop-update.json`, `999-048-desktop-runtime.log` |
+
+The packaged tests verify the SHIFT polar key, `2∠45` in both coordinate formats, linear precedence, split components, the complex integer-power and Verify examples, and the typeset `πi` from `ln(−1)`. They also check per-root coordinate formatting and both decimal components after restarting the app. [Complex input and limits](999CW.md)
+
+## 0.4.7 fx-999CN CW LCD · deployed 2026-11-10
+
+The existing desktop shortcut opens the verified Windows x64 package. All 77 copied files matched the staged build by SHA-256. The previous build and both state files are in `release/desktop-backup-20261110-180449-before-v0.4.7`. The installed executable opened an isolated copy of all six profiles. Both live state files matched their backups afterward.
+
+| Check | Result | Evidence in `.verification/` |
+| --- | --- | --- |
+| Core | 952 passed | `999-047-core.log` |
+| Packaged 999 workflows | 66 passed | `999-047-packaged-ui.log` |
+| Packaged fraction layout | 10 passed | `999-047-packaged-fractions.log` |
+| Packaged native entry, usability and EX | 80 passed | `999-047-packaged-native.log`, `999-047-packaged-usability.log`, `999-047-packaged-ex.log` |
+| Installed executable and profile load | Passed | `999-047-asar.log`, `999-047-desktop-update.json`, `999-047-desktop-runtime.log` |
+
+The font bytes in the Windows package match the source asset. The packaged runs verify both HOME pages, the fixed indicator strip and history markers, dot-matrix digits in input and results, four contrast tones, and a blank display on power-off. Fraction checks include the 360×640 window at 125% and 150% zoom. The measured edges of the first HOME selection differ from the manual screenshot by less than one logical LCD unit in the captured layout. [LCD and device scope](999CW.md)
+
+## 0.4.6 fx-999CN CW catalog and engineering notation · 2026-11-09
+
+The existing desktop shortcut opens the verified Windows x64 package. All 77 installed files matched the staged package by SHA-256. The previous build and both state files are in `release/desktop-backup-20261109-185541-before-v0.4.6`. The installed executable opened an isolated copy of all six profiles. Both live state files matched their backups afterward.
+
+| Check | Result | Evidence in `.verification/` |
+| --- | --- | --- |
+| Core | 952 passed | `999-046-core-final.log` |
+| Packaged 999 workflows | 62 passed | `999-046-packaged-ui.log` |
+| Packaged fraction layout | 10 passed | `999-046-packaged-fractions.log` |
+| Packaged native entry, usability and EX | 80 passed | `999-046-packaged-native.log`, `999-046-packaged-usability.log`, `999-046-packaged-ex.log` |
+| Installed executable and profile load | Passed | `999-046-asar.log`, `999-046-desktop-update.json`, `999-046-desktop-runtime.log` |
+
+The packaged runs check the manual's engineer symbol example with symbol display on and the 1234 example with symbol display off. They verify right and left shifts, exit with the shifted value still displayed, and an unchanged numeric Ans. The runs also cover the radian suffix, postfix percentage, linear permutation and remainder, Fix 3 rounding in Calculate and Spreadsheet, and suffix insertion in a Ratio coefficient. [999 scope and limits](999CW.md)
+
+## 0.4.5 fx-999CN CW distribution and spreadsheet · 2026-11-09
+
+The existing desktop shortcut opens the tested Windows x64 package. All 77 copied files matched the staged package by SHA-256. The installed executable and `app.asar` hashes were checked again at the shortcut target. The previous package and both state files are in `release/desktop-backup-20261109-182540-before-v0.4.5`.
+
+| Check | Result | Evidence in `.verification/` |
+| --- | --- | --- |
+| Core | 948 passed | `999-045-core.log` |
+| Packaged 999 workflows | 57 passed | `999-045-packaged-ui.log` |
+| Packaged fraction layout | 10 passed | `999-045-packaged-fractions.log` |
+| Packaged native entry, usability and EX | 80 passed | `999-045-packaged-native.log`, `999-045-packaged-usability.log`, `999-045-packaged-ex.log` |
+| Installed executable and profile load | Passed | `999-045-desktop-update.json`, `999-045-desktop-runtime.log` |
+
+The packaged workflows check the manual distribution and spreadsheet examples, direct rare right tails, inverse-normal limits, insertion at the parameter caret and file round-trip of 225 cells including formulas. Both import choices were exercised with a populated worksheet. The installed executable opened an isolated copy of all six profiles, initialized missing 999 setting and precision fields to defaults, and retained the stored profile contents. The live state files matched their backups after the check. [999 scope and limits](999CW.md)
+
+## 0.4.4 fx-999CN CW precision and entry · 2026-11-09
+
+The desktop shortcut targets the verified Windows x64 build. Its `app.asar` matches the tested package by SHA-256. The previous build and a profile copy are in `release/desktop-backup-20261109-073253-before-v0.4.4`. The package opened an isolated copy of all six profiles with the checked scalar, function, angle, array and statistics data preserved.
+
+| Check | Result | Evidence in `.verification/` |
+| --- | --- | --- |
+| Core | 939 passed | `999-044-core-first.log` |
+| Packaged 999 workflows | 53 passed | `999-044-packaged-ui.log`, `999-ui-results.json`, `999-manual-ui-results.json` |
+| Packaged fraction layout | 10 passed | `999-044-packaged-fractions.log`, `fraction-layout-ui-results.json` |
+| Shared native entry and usability | 52 passed | `999-044-shared-ui.log` |
+
+The packaged workflows check the decimal low digit after closing and reopening the app. They also check the manual's division-by-zero cursor correction, both logarithm entry styles, six sexagesimal markers, implicit divisor grouping and the centimeter-to-inch command. [999 scope and limits](999CW.md)
+
+## 0.4.3 fx-999CN CW manual workflows · deployed 2026-11-09
+
+The 0.4.3 Windows package passed 48 model workflows and 10 fraction layout checks. The core suite passed 933 tests. The source regression run passed 62 usability, native entry and fraction layout checks. An isolated copy of the six profiles retained the checked variable, function, angle, array and statistics data. The previous build and profile copy are in `release/desktop-backup-20261109-070317-before-v0.4.3`.
+
+| Check | Evidence in `.verification/` |
+| --- | --- |
+| Core | `999-043-core-verified.log` |
+| 999 package | `999-043-packaged-ui.log` |
+| Packaged fraction layout | `999-043-packaged-fractions.log` |
+| Shared source regression | `999-043-regression-source.log` |
+
+## 0.4.2 fx-999CN CW · 2026-11-08
+
+The desktop shortcut targets the tested Windows x64 build in `release/win-unpacked`. The previous 0.4.1 program and a copy of the profile were saved in `release/desktop-backup-20261108-192954-before-v0.4.2`. The deployed `app.asar` matched the tested package by SHA-256. A launch with a copy of the six saved profiles preserved scalar memories, function definitions and angle units.
+
+| Check | Result | Evidence in `.verification/` |
+| --- | --- | --- |
+| Core tests | 928 passed | `999-final-core.log` |
+| 999 UI in the Windows package | 34 passed | `999-packaged-ui-final.log`, `999-ui-results.json` |
+| Fraction layout in the Windows package | 10 passed | `999-packaged-fractions-final.log`, `fraction-layout-ui-results.json` |
+| Shared input, completion and EX UI | 71 passed | `999-native-regression.log`, `999-completion-regression.log`, `999-ex-regression.log` |
+
+The initial fraction regression revealed clipping on the shortened Calculate screen. Restoring its display height and rerunning at 100%, 125% and 150% resolved the regression. The 999 results establish coverage of the implemented workflows. Hardware comparison remains pending for the full model. [999 scope and limits](999CW.md)
+
+## 0.13.0 local Windows update
 
 2026-11-01: **scientific calculator simulator 0.13.0** replaced the existing desktop application. The installed title/version/packaged state, shortcut, visible window and the current 6 profiles were verified. CG50 remains Experimental. The complete 1:1 manual/device objective is **not complete**; all sixteen chapters retain their documented partial status in [CG50_MANUAL_AUDIT.md](CG50_MANUAL_AUDIT.md).
 

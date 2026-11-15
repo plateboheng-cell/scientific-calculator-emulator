@@ -25,6 +25,45 @@ const english = {
   '泊松概率密度':'Poisson PD','泊松累积分布':'Poisson CD','列表':'List',
   '下限':'Lower','上限':'Upper','区域':'Area','错误':'Error','单元格内容':'Cell contents',
   '编辑单元格':'Edit cell','公式填充':'Fill formula','数值填充':'Fill value','公式':'Formula','数值':'Value','范围':'Range',
+  '自动计算':'Auto Calc','显示单元格':'Show Cell','数据抓取':'Grab','插入行':'Insert Row','赋值':'Store','执行':'Execute',
+  '开':'On','关':'Off','是':'Yes','否':'No','设置 & 数据':'Settings & Data','变量存储器':'Variable Memory',
+  '确认':'Confirm','编辑':'Edit','最小值':'Minimum','最大值':'Maximum','平均值':'Mean',
+  '计算设置':'Calc Settings','系统设置':'System Settings','计算器 ID':'Calculator ID','对比度':'Contrast',
+  '数学输入/数学输出':'MathI/MathO','数学输入/小数输出':'MathI/DecimalO','线性输入/线性输出':'LineI/LineO','线性输入/小数输出':'LineI/DecimalO',
+  '工程符号':'Engineer Symbol','分数结果':'Fraction Result','假分数':'Improper Fraction','复数结果':'Complex Result','小数点显示':'Decimal Mark',
+  '句点':'Dot','逗号':'Comma','数字分隔符':'Digit Separator','多行字体':'MultiLine Font','普通字体':'Normal Font','小字体':'Small Font',
+  '质因数分解':'Prime Factor','代数形式(a+bi)':'Rectangular (a+bi)','极坐标形式(r∠θ)':'Polar (r∠θ)',
+  '运算验证开启':'Verify ON','运算验证关闭':'Verify OFF','运算验证':'Verify','函数与分析':'Func Analysis','数值计算':'Numeric Calc',
+  '角度 / 坐标转换 / 六十进制':'Angle / Coord / Sexagesimal','双曲线 / 三角函数':'Hyperbolic / Trig','多语句/赋值':'Multi-statement / Store',
+  '弧度':'Radians','百分度':'Gradians','工程记数法移位':'Engineering shift',
+  '毫(ｍ)':'milli (m)','微(μ)':'micro (μ)','纳(ｎ)':'nano (n)','皮(ｐ)':'pico (p)','飞(ｆ)':'femto (f)',
+  '千(ｋ)':'kilo (k)','兆(Ｍ)':'mega (M)','吉(Ｇ)':'giga (G)','太(Ｔ)':'tera (T)','拍(Ｐ)':'peta (P)','艾(Ｅ)':'exa (E)',
+  '单位转换':'Unit Conversions','撤消':'Undo','化简':'Simplify','无法化简':'Cannot Simplify','自动':'Auto','手动':'Manual',
+  '单变量统计':'1-Variable','双变量统计':'2-Variable','单变量结果':'1-Var Results','双变量结果':'2-Var Results',
+  '统计计算':'Statistics Calc','回归计算结果':'Regression Results','选择回归类型':'Select Regression Type','编辑数据':'Data Editor',
+  '均值/方差/标准差/...':'Mean/Variance/Std Dev/...','最小值/最大值/四分位数':'Min/Max/Quartile','最小值/最大值':'Min/Max',
+  '正态分布':'Normal Dist','排序':'Sort','升序':' Ascending','降序':' Descending','表格类型':'Table Type','表格范围':'Table Range',
+  '定义f(x)/g(x)':'Define f(x)/g(x)','定义f(x)':'Define f(x)','定义g(x)':'Define g(x)','开始值':'Start','删除f/g列':'Delete f/g Columns',
+  '线性方程组':'Simul Equation','多项式方程':'Polynomial','复数根':'Complex Roots','无实根':'No Real Roots','无数解':'Infinite Solutions',
+  '无极值':'No Extrema','所有实数':'All Real Numbers','运算验证不可用':'Verify Unavailable','输入解':'Input Solution','返回方程':'Return to Equation',
+  '确认解':'Show Solution','解数':'Number of Solutions','求解目标':'Solve Target','输入初始值':'Input Initial Value','继续':'Continue','退出':'Quit',
+  '矩阵行列数?':'Matrix Dimensions?','向量维数?':'Vector Dimensions?','行数':'Rows','列数':'Columns','维数':'Dimensions','新建':'Define New',
+  '定义矩阵':'Define Matrix','定义向量':'Define Vector','单位化':'Unit Vector','内积':'Dot Product','向量角度':'Vector Angle',
+  '十六进制数码':'Hexadecimal Digits','进制前缀':'Base Prefix','位运算':'Logic','二进制':'Binary','八进制':'Octal','求余数':'Remainder',
+  '调用':'Recall','无':'None','未定义':'Not Defined','变量错误':'Variable ERROR','自变量错':'Argument ERROR','超时':'Time Out',
+  '无运算符':'No Operator','对数(logab)':'Logarithm (base)','长度':'Length','面积':'Area','体积':'Volume','质量':'Mass',
+  '扩展分布':'Extended Distribution','二项右尾 P(X≥x)':'Binomial upper tail P(X≥x)','泊松右尾 P(X≥x)':'Poisson upper tail P(X≥x)',
+  '正态右尾 P(X≥下限)':'Normal upper tail','右尾反正态':'Upper-tail inverse normal',
+  '计数须为 0 至 1000000000 的整数':'Count must be an integer from 0 to 1000000000',
+  '泊松平均值须在 0 到 1000000000 之间':'Poisson mean must be between 0 and 1000000000',
+  '桌面工作表':'Desktop Worksheet','容量模式':'Capacity Mode','原机容量':'Handheld Capacity','扩展容量':'Extended Capacity',
+  '保存工作表文件':'Save Worksheet File','从文件恢复':'Restore from File','用文件替换当前工作表？':'Replace the current worksheet with this file?',
+  '替换':'Replace','当前工作表超出原机容量':'The current worksheet exceeds handheld capacity',
+  '工作表文件过大':'Worksheet file is too large','无效的 999 工作表文件':'Invalid 999 worksheet file',
+  '工作表文件中有无效的单元格地址':'Worksheet file contains an invalid cell address',
+  '工作表文件中有无效的单元格内容':'Worksheet file contains invalid cell contents','此型号不支持扩展工作表':'Extended worksheets are unavailable on this model',
+  '单元格输入不得超过 128 字节':'Cell input must not exceed 128 bytes',
+  '速度':'Velocity','压强':'Pressure','能量':'Energy','功率':'Power','温度':'Temperature',
   '复制 & 粘贴':'Copy & Paste','剪切 & 粘贴':'Cut & Paste','粘贴':'Paste','全部删除':'Delete all','剩余字节':'Free bytes','重新计算':'Recalculate',
   '概率须在 0 到 1 之间':'Probability must be between 0 and 1',
   '整数参数须在 0 到 1000000 之间':'Integer parameters must be between 0 and 1000000',
@@ -218,7 +257,7 @@ Object.assign(english,{
   '微分':'Derivative','求和':'Summation','求积':'Product','频数':'Frequency','＋ 添加行':'+ Add row','− 删除末行':'− Remove last row'
   ,'角度':'Angle'
 });
-const phrases = Object.keys(english).filter(key => /\p{Script=Han}/u.test(key)).sort((a,b) => b.length-a.length);
+const phrases = Object.keys(english).filter(key => !['开','关','是','否','无'].includes(key)&&/\p{Script=Han}/u.test(key)).sort((a,b) => b.length-a.length);
 const phrasePattern = new RegExp(phrases.map(key => key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'gu');
 
 export function translate(source, language) {
@@ -227,6 +266,10 @@ export function translate(source, language) {
   if (english[text]) return source.replace(text,english[text]);
   if (/^请输入「(.+)」$/.test(text)) return `Enter ${translate(text.slice(4,-1),language)}`;
   let translated=source
+    .replace(/(\d+)个未知数/g,'$1 unknowns')
+    .replace(/(\d+)个解/g,'$1 solution(s)')
+    .replace(/^(Mat[A-D]|Vct[A-D]):无$/g,'$1:None')
+    .replace(/：无$/g,':None')
     .replace(/(\d+) 元联立方程/g,'$1 unknowns')
     .replace(/(\d+) 元方程 · 系数与常数/g,'$1 unknowns · coefficients and constants')
     .replace(/(\d+) 次不等式/g,'Degree $1 inequality')

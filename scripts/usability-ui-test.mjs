@@ -44,7 +44,13 @@ try{
   await check('999 CW exposes the same 2018 categories without changing its twelve apps',async()=>{
     await key('menu').click();assert.equal(await page.locator('.mode-tile').count(),12);await page.locator('[data-mode="0"]').click();await key('catalog').click();await page.locator('.list-item').filter({hasText:'科学常数'}).click();assert.equal(await page.locator('.list-item').count(),6);
   });
-  await check('999 CW shares corrected SOLVE through its own keyboard shortcut',async()=>{await page.keyboard.press('Shift+F6');await parameters({expr:'1e-24*(x-1)=0',guess:0});near((await stored()).profiles.cn999cw.calculator.vars.x,1);});
+  await check('999 CW solves through its target and initial value screens',async()=>{
+    await page.keyboard.press('Shift+F6');
+    await page.locator('[data-name=expr]').evaluate((el,latex)=>{el.value=latex;},'10^{-24}(x-1)=0');
+    await key('execute').click();await page.locator('.list-item').filter({hasText:/^x/}).click();
+    await page.locator('[data-name=x]').fill('0');await key('execute').click();await key('execute').click();
+    near((await stored()).profiles.cn999cw.calculator.vars.x,1);
+  });
   await select('ti36xpro');
   await check('TI MODE presents the six original rows with independent settings',async()=>{
     await page.keyboard.press('F11');assert.equal(await page.locator('.ti-mode-row').count(),6);assert.deepEqual(await page.locator('.ti-mode-row').first().locator('button').allTextContents(),['DEG','RAD','GRAD']);await page.screenshot({path:path.join(evidence,'ti-mode.png')});

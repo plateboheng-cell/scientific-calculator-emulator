@@ -14,7 +14,7 @@ No calculator firmware, manufacturer logos or proprietary artwork are included. 
 | --- | --- | --- |
 | fx-991CN X | Available | Ten modes, SHIFT/ALPHA, CALC/SOLVE, memory M and CODATA 2010 constants |
 | fx-991CN CW | Experimental | 48-key layout, paged HOME, Catalog/Tools/Format, f/g registration, 45/30-row tables and 47 CODATA 2018 constants |
-| fx-999CN CW | Experimental | First-generation white CW layout, twelve HOME apps, seven distributions, 45-entry discrete lists and an A1:E45 spreadsheet |
+| fx-999CN CW | Experimental | First-generation white CW layout, twelve HOME apps, dot-matrix LCD, seven distributions, A1:E45 spreadsheet and high-precision real and complex calculation |
 | TI-36X Pro | Experimental | Multi-tap keys, eight variables, six-row MODE, 20 constants, seven distributions, Auto/Ask-x tables, 40 conversion directions, op/setop, mixed-number entry and software contrast |
 | fx-CG50 | Experimental | Nineteen application workflows; twenty graph slots with multiple relation types, analysis/sketch/modify and graph memories; six statistical List Files, spreadsheets, recursion, programs, finance, geometry and 3D |
 | fx-991EX | Experimental | Independent English keyboard, twelve apps with 1–9/A/B/C menu, nine variables, Calculate SOLVE, 45/30-row tables, distributions, a volatile A1:E45 spreadsheet and simulator-text QR export |
@@ -25,7 +25,7 @@ See the [compatibility matrix](docs/COMPATIBILITY.md), [current usability scope]
 
 ## Getting started
 
-Build this checkout using the commands below. **The next GitHub release, v0.4.0, is being prepared from local development through 0.13.0.** Current local validation and installation evidence is recorded in [VERIFICATION.md](docs/VERIFICATION.md).
+Download the Windows x64 build from [GitHub Releases](https://github.com/plateboheng-cell/scientific-calculator-emulator/releases). See the [v0.4.9 verification record](docs/VERIFICATION.md) for test results.
 
 - Run the Windows x64 portable EXE directly. For an unpacked build, keep the entire directory together and run `scientific calculator simulator.exe`.
 - On first launch, select a model. Use **Switch model** to return to the selector.
@@ -34,7 +34,7 @@ Build this checkout using the commands below. **The next GitHub release, v0.4.0,
 - Each model keeps its own history, real variables, settings and supported data. Interface language is shared. Switching clears unsubmitted input.
 - Legacy `cnx-v1` data migrates to the X profile; the old storage key remains available for rollback.
 
-Calculator data is stored in the local Electron user-data directory. Clearing that directory can remove saved work. Complex Ans and matrix/vector answer registers are session values. The 999 spreadsheet is volatile: switching models, power operations or restarting clears it. EX also clears its spreadsheet and statistics when leaving their applications. See the model documentation before relying on device-specific retention.
+Calculator data is stored in the local Electron user-data directory. The fx-999CN CW profile preserves supported real and complex values with their retained digits. Switching models, power operations or restarting clears the active 999 worksheet. Save a local copy through **TOOLS → Desktop Worksheet**. EX clears its spreadsheet and statistics when leaving their applications. See the [model notes](docs/999CW.md) for retention details.
 
 ## Features
 
@@ -50,7 +50,7 @@ Calculator data is stored in the local Electron user-data directory. Clearing th
 
 On X, enter an equation in **Calculate**, use **ALPHA CALC** for `=`, then **SHIFT CALC** for SOLVE. Edit variable values and select the unknown without leaving Calculate. CW/999 keep Solver in **Equation**. Fraction keys use stacked numerator/bar/denominator symbols, capture a preceding numerator, and distinguish SHIFT mixed-number input from the division operator. See [native input and layout fixes](docs/NATIVE_INPUT.md) for verified sequences and remaining differences.
 
-Numerical algorithms use IEEE 754 doubles. SOLVE, polynomial roots, calculus and regression outputs retain approximate-result semantics. Other fraction/radical recognition is bounded numeric recognition, not a general computer algebra system. SOLVE finds one local real root and does not guarantee all roots. Ill-conditioned inputs and unresolved features may be rejected or missed.
+Supported fx-999CN CW arithmetic retains 23 significant decimal digits for each real or complex component. SOLVE, polynomial roots, calculus and regression use numerical algorithms. Fraction and radical recognition is bounded. SOLVE finds one local real root and may miss ill-conditioned inputs. See the [999 calculation notes](docs/999CW.md).
 
 CG50 Link can inspect/preserve G3M archive records and decode/encode the footer-free CP0001 RGB565 G3P picture variant. Native G3M program tokens, G3E eActivity strips, CASIO's proprietary WES QR payload/service and the EA200 native protocol are not implemented. No physical calculator or original vendor files were available for comparison; project tests and working menus do not establish complete manual or hardware parity.
 

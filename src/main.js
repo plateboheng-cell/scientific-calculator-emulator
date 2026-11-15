@@ -2,6 +2,9 @@ import './style.css';
 import './ui/classwiz-chassis.css';
 import './ui/model-picker.css';
 import './ui/model-cover.css';
+import './ui/workspace-appearance.css';
+import './ui/cw-data.css';
+import './ui/cw-lcd.css';
 import katex from 'katex';
 import { math, assert, decimal, exactTex, mixedTex, factorize, normalize } from './engine/calculator.js';
 import { ModelCalculator } from './engine/model-calculator.js';
@@ -19,7 +22,7 @@ import {createCGRunMenu} from './ui/cg-run-menu.js';
 import {createCGMetricMenu} from './ui/cg-metric-menu.js';
 import {metricUnitLatex,metricArrowLatex,metricUnitToken,metricArrowToken} from './input/cg-metric-symbols.js';
 import {cgCalcFunctionLatex,cgCalcInfixLatex} from './input/cg-calc-symbols.js';
-import {simplifyCGRational} from './engine/cg-rational-display.js';
+import {evaluateCGRationalExpression,formatCGRationalDisplay,simplifyCGRational} from './engine/cg-rational-display.js';
 import {CG_FINANCIAL_FUNCTIONS,CG_FINANCIAL_VARIABLES} from './engine/cg-financial-functions.js';
 import {CG_STATISTICAL_FUNCTIONS,CG_STATISTICAL_VARIABLES,CG_STATISTICAL_COMMANDS} from './engine/cg-statistical-functions.js';
 import {cgNativeVariableLatex,cgNativePostfixLatex,cgNativeFunctionLatex,cgNativePrefixLatex} from './input/cg-native-symbols.js';
@@ -32,12 +35,23 @@ import {createTiMode} from './ui/ti-mode.js';
 import {createXSolvePanel} from './ui/x-solve-panel.js';
 import {tiDisplay} from './engine/ti-display.js';
 import {cwHomeHTML,updateCwHomePage} from './ui/cw-home.js';
+import {updateCWLCDStatus} from './ui/cw-lcd-status.js';
 import {classwizMenuHTML,updateClasswizMenu} from './ui/classwiz-menu.js';
 import {createCompletionController} from './input/completion.js';
 import {createTextUndo} from './input/text-undo.js';
+import {createCWEditHistory,cwEntrySnapshot,restoreCWEntrySelection,selectCWArgument,cwArgumentMatches,cwArgumentTemplate,jumpCWTemplate,moveCWEntryHorizontally} from './ui/cw-entry-edit.js';
 import {createCGLinearEditor} from './input/cg-linear-editor.js';
 import {createGraphPanel} from './ui/graph-panel.js';
 import {createSpreadsheetPanel} from './ui/spreadsheet-panel.js';
+import {downloadCGData as downloadLocalData} from './ui/cg-ui.js';
+import {encodeCWWorkbook,readCWWorkbook,CW_WORKBOOK_MAX_BYTES} from './engine/cw-workbook.js';
+import {createCWDistributionPanel} from './ui/cw-distribution-panel.js';
+import {openCWEquation,openCWSolver} from './ui/cw-equation.js';
+import {openCWTable} from './ui/cw-table.js';
+import {openCWStatistics} from './ui/cw-statistics.js';
+import {cwArrayCatalog,cwArrayVariables,showCWArrayResult} from './ui/cw-arrays.js';
+import {openCWVariables} from './ui/cw-variables.js';
+import {createCWPages} from './ui/cw-screens.js';
 import {createCGWorkspacePanel} from './ui/cg-workspace-panel.js';
 import {createCGArrayPanel} from './ui/cg-array-panel.js';
 import {createCGSetupPanel} from './ui/cg-setup-panel.js';
@@ -62,19 +76,32 @@ import {createTiExtensions} from './ui/ti-extensions.js';
 import {createQrPanel} from './ui/qr-panel.js';
 import {buildQrPayload} from './engine/qr-export.js';
 import {distributionTypes} from './engine/distributions.js';
+import {formatCWEngineering,formatCWValue} from './engine/cw-settings.js';
+import {cwComplexHTML,cwNumericHTML} from './ui/cw-number-display.js';
+import {cwStatLatex,CW_STAT_POSTFIX} from './engine/cw-statistics.js';
+import {cwMatrixExpression,cwMatrixPower,cwVectorExpression,cwVectorMultiply} from './engine/cw-arrays.js';
+import {cwRemainder} from './engine/cw-calculus.js';
+import {cwEngineeringExponent} from './engine/cw-decimal.js';
+import {CW_ANGLES,CW_ENGINEERING,cwPostfixCommand} from './engine/cw-operators.js';
+import {cwSexagesimalText,displayCWLinearInput,prepareCWImplicitDivision,prepareCWLinearInput} from './engine/cw-notation.js';
+import {CW_UNIT_GROUPS,cwUnitCommand} from './engine/cw-units.js';
+import {cwBaseCalculate,cwBaseFormat,CW_BASES,CW_BASE_LABELS,CW_BASE_PREFIXES} from './engine/cw-base.js';
+import {verifyCWExpression,cwRelations,cwRelationLatex} from './engine/cw-verify.js';
+import {cwDataKeyText} from './ui/cw-data-entry.js';
 import { createLocalizer } from './i18n.js';
-import { createMathInput, isMathInput, readInput as baseReadInput, insertIntoMath, keyLatex, setMathLanguage } from './math-input.js';
+import { createMathInput, isMathInput, readInput as baseReadInput, insertIntoMath, keyLatex, cwExpressionKeys, setMathLanguage } from './math-input.js';
 import { expressionToLatex,latexToExpression } from './engine/notation.js';
 import { formulaLayout } from './templates.js';
 
 const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const store=new AppStore(createDesktopStorage(localStorage,window.simulatorDevice),detectSystemLanguage());
 const textUndo=createTextUndo(document);
+const cwEditHistory=createCWEditHistory();
 let model=getModel(store.data.activeModel||'cnx');
 let modes=model.modes;
 const bootProfile=store.profile(model.id),bootPowered=powerOnCGExam(bootProfile);
 let state=createSession(bootPowered,store.data.language,model.id);
-let calc=new ModelCalculator(model.id,state.calculator);
+let calc=new ModelCalculator(model.id,state.calculator,state);
 let graphPanel=null,sheetPanel=null,sheet=null,tiPanel=null,xSolvePanel=null;
 let appPanel=null,qrPanel=null,tiExtensions=null,cgSoftPage=0,graphInsertionPending=false,cgNativeMenu=null;
 let coverReveal=null;
@@ -87,9 +114,24 @@ function closeCGNativeMenu(){const previous=cgNativeMenu;cgNativeMenu=null;previ
 function syncCGCalculationSettings(){if(model.family!=='cg')return;const preferences=ensureCGSetupState(calc,state);calc.cgSimplify=preferences.simplify;calc.cgComplexMode=preferences.complex;}
 function closeCGCalculationNotice(){const previous=cgCalculationNotice;cgCalculationNotice=null;previous?.close();}
 function showCGCalculationNotice(message){closeCGCalculationNotice();if(!message)return;cgCalculationNotice=createCGCalculationNotice({parent:$('#app'),message,onClose:()=>{cgCalculationNotice=null;if($('#entry')&&!cgCaptureDialog)focusEntry();}});queueMicrotask(()=>{if(!cgCaptureDialog)cgCalculationNotice?.focus();});}
-function readInput(element,context={}){return element===cgLinearElement&&cgLinearEditor?cgLinearEditor.source():baseReadInput(element,{family:model.family,...context});}
+function readInput(element,context={}){return element===cgLinearElement&&cgLinearEditor?cgLinearEditor.source():baseReadInput(element,{family:model.family,cwNative:!!state.cwSettings,...context});}
 function uncover(){coverReveal?.finish();coverReveal=revealModelCover($('.calculator'),model);}
-let distributionParameters={},distributionRows=[];
+let distributionSession={parameters:{},rows:[]},cwDistributionPanel=null;
+const cwHistoryValues=new WeakMap();
+function clearCWData(){
+  sheet=null;sheetPanel=null;cwDistributionPanel=null;
+  distributionSession={parameters:{},rows:[]};
+  cwEditHistory.clear();
+}
+function clearCWHistory(){state.history=[];state.historyIndex=-1;state.cwReplay=false;state.undo=[];state.pending=[];state.cwArgument=null;state.cwReplayAfterClear=null;cwEditHistory.clear();}
+function clearCWPowerMemory(){
+  if(!state.cwSettings)return;
+  for(const key of Object.keys(calc.vars))calc.assign(key,0);
+  calc.definitions={};
+  clearCWHistory();
+  Object.assign(state,{expr:'',latex:'',error:'',hasAnswer:false,eng:null,cwVerify:false,cwRational:null,cwExactAnswer:null,cwScreen:null,cwTable:null,cwStat:null,cwSolverExpression:'',cwSolverGuesses:null,matrices:{},vectors:{},MatAns:null,VctAns:null,statsRows:[],statResult:null});
+  persist();
+}
 const tiMultiTap=createTiMultiTap(insert);
 const menuModes=()=>model.nativeMenu||modes;
 function unavailable(label){let notice=$('#capability-notice');if(!notice){notice=document.createElement('div');notice.id='capability-notice';notice.setAttribute('role','status');$('#app').append(notice);}notice.innerHTML='<span>尚未实现</span>: '+esc(label);}
@@ -101,7 +143,21 @@ function activateMode(id){
   $('#capability-notice')?.remove();const index=modes.findIndex(m=>m[3]===id);if(index<0)return;
   if(model.spreadsheetLifecycle==='leave-app'&&state.mode==='spreadsheet'&&id!=='spreadsheet'){sheet?.clear();sheet=null;}
   if(model.volatileStatistics&&state.mode==='stat'&&id!=='stat'){state.statsRows=[];state.statResult=null;}
-  if(state.mode==='distribution'&&id!=='distribution')distributionRows=[];
+  if(state.mode==='distribution'&&id!=='distribution')distributionSession.rows=[];
+  if(state.mode==='spreadsheet'&&id!=='spreadsheet')sheetPanel=null;
+  cwDistributionPanel=null;
+  if(state.cwSettings){
+    state.cwConversion=null;
+    if(state.mode!==id){
+      state.cwVerify=false;
+      if(state.mode==='table')state.cwTable=null;
+      if(state.mode==='stat')state.cwStat=null;
+      if(state.mode==='matrix')state.MatAns=null;
+      if(state.mode==='vector')state.VctAns=null;
+      if(id==='base')state.base=10;
+    }
+    state.cwScreen=null;
+  }
   if(model.family==='ti'&&['calc','complex'].includes(id)){
     state.tiSettings.base=10;state.base=10;
     if(id==='calc')state.tiSettings.result='real';else if(state.tiSettings.result==='real')state.tiSettings.result='rect';
@@ -117,10 +173,10 @@ function tiMode(){
     onQuit:tiReturn});
 }
 function tiReturn(){state.mode=state.tiSettings.base===10?(state.tiSettings.result==='real'?'calc':'complex'):'base';state.base=state.tiSettings.base;state.stack=[];showCalc();persist();}
-function closeGraph(){closeCGCalculationNotice();if(cgNativeMenu?.kind==='metric')closeCGNativeMenu();cgLinearEditor?.destroy();cgLinearEditor=null;cgLinearElement=null;appPanel?.destroy();appPanel=null;qrPanel?.destroy();qrPanel=null;$('#cg-context-softkeys')?.remove();xSolvePanel?.destroy();xSolvePanel=null;tiPanel?.destroy();tiPanel=null;sheetPanel?.destroy();sheetPanel=null;graphPanel?.destroy();graphPanel=null;$('.calculator')?.classList.remove('graph-view');$('#screen')?.classList.remove('calculation-screen');}
-function fitModel(){const element=$('.calculator');if(element)element.style.setProperty('--model-scale',String(Math.min(1,(innerHeight-80)/element.offsetHeight,(innerWidth-20)/element.offsetWidth)));}
+function closeGraph(){closeCGCalculationNotice();if(cgNativeMenu?.kind==='metric')closeCGNativeMenu();cgLinearEditor?.destroy();cgLinearEditor=null;cgLinearElement=null;appPanel?.destroy();appPanel=null;qrPanel?.destroy();qrPanel=null;$('#cg-context-softkeys')?.remove();xSolvePanel?.destroy();xSolvePanel=null;tiPanel?.destroy();tiPanel=null;if(!model.nativeCw)sheetPanel=null;graphPanel?.destroy();graphPanel=null;$('.calculator')?.classList.remove('graph-view');$('#screen')?.classList.remove('calculation-screen');}
+function fitModel(){const element=$('.calculator');if(element)element.style.setProperty('--model-scale',String(Math.min(1,(innerHeight-80)/element.offsetHeight,(innerWidth-20)/element.offsetWidth)));if(model.nativeCw)syncCWAnswerScroll($('#answer'));}
 function showGraph(){graphInsertionPending=false;closeGraph();state.mode='graph';state.view='graph';state.form=null;state.list=null;$('.calculator').classList.add('graph-view');graphPanel=createGraphPanel({host:$('#screen'),calculator:calc,settings:state.graph,workspace:model.family==='cg'?state.cgWorkspace:undefined,profile:model.family==='cg'?state:undefined,onCommit:persist});status();requestAnimationFrame(fitModel);}
-function initialView(){if(state.mode==='graph'&&model.graphing)showGraph();else if(['distribution','spreadsheet'].includes(state.mode)||model.family==='cg'&&!['calc','complex','base'].includes(state.mode))modeOptions();else showCalc();requestAnimationFrame(fitModel);}
+function initialView(){if(state.mode==='graph'&&model.graphing)showGraph();else if(['distribution','spreadsheet'].includes(state.mode)||model.family==='cg'&&!['calc','complex','base'].includes(state.mode)||model.nativeCw&&!['calc','complex'].includes(state.mode))modeOptions();else showCalc();requestAnimationFrame(fitModel);}
 function inputContext(mode=state.mode){return {mode,family:model.family,aliases:mode==='vector'?Object.fromEntries(Object.entries(model.vectorLabels||{}).map(([name,label])=>[label,name])):{}};}
 $('#app').innerHTML=calculatorHTML(model);
 function bindCGArrayMemory(){if(model.family==='cg'){calc.arrayMemory={lists:state.cgWorkspace?.statistics?.lists||[],names:state.cgWorkspace?.statistics?.names||[],matrices:state.matrices||{},vectors:state.vectors||{},strings:state.cgWorkspace?.strings||[]};calc.graphMemory=state.graph;}}
@@ -139,7 +195,7 @@ function showModelPicker(){
   picker.addEventListener('close',()=>focusEntry());
   picker.showModal();
 }
-function resetCurrentProfile(){if(model.family==='cg'&&state.cgExam?.active){importCGProfile(enterCGExam({...state,calculator:calc.save()}));return;}const language=state.language;closeGraph();sheet=null;store.resetProfile(model.id);state=createSession(store.profile(model.id),language,model.id);calc=new ModelCalculator(model.id,state.calculator);bindModelExtensions();initialView();persist();}
+function resetCurrentProfile(){if(model.family==='cg'&&state.cgExam?.active){importCGProfile(enterCGExam({...state,calculator:calc.save()}));return;}const language=state.language;closeGraph();clearCWData();store.resetProfile(model.id);state=createSession(store.profile(model.id),language,model.id);calc=new ModelCalculator(model.id,state.calculator,state);bindModelExtensions();initialView();persist();}
 function bindModelExtensions(){
   calc.examination=model.family==='cg'&&state.cgExam?.active===true;
   syncCGCalculationSettings();
@@ -351,8 +407,8 @@ function selectModel(id){
   disposeCGProgramGraphics(cgRunGraphicsSession);cgRunGraphicsSession={};
   closeCGNativeMenu();
   if(store.data.activeModel===id){$('#model-picker').close();return;}
-  coverReveal?.finish();persist();closeGraph();sheet=null;distributionParameters={};distributionRows=[];store.select(id);model=next;modes=model.modes;
-  state=createSession(powerOnCGExam(store.profile(id)),store.data.language,id);calc=new ModelCalculator(id,state.calculator);
+  coverReveal?.finish();persist();closeGraph();clearCWData();store.select(id);model=next;modes=model.modes;
+  state=createSession(powerOnCGExam(store.profile(id)),store.data.language,id);calc=new ModelCalculator(id,state.calculator,state);
   document.body.classList.remove('expanded');
   $('#app').innerHTML=calculatorHTML(model);setMathLanguage(state.language);localizer.setLanguage(state.language);
   bindModelExtensions();initialView();showStorageWarning();uncover();
@@ -363,13 +419,19 @@ function setLanguage(language){state.language=language;store.data.language=langu
 function languageMenu(){list('语言 / Language',[item('中文',()=>{state.selected=0;highlight();setLanguage('zh');}),item('English',()=>{state.selected=1;highlight();setLanguage('en');})],true,state.language==='en'?1:0);}
 
 function status(){
-  $('#shift-ind').classList.toggle('muted',!state.shift);$('#alpha-ind').classList.toggle('muted',!state.alpha);
-  $('#memory-ind').classList.toggle('muted',!calc.vars.M);
-  $('#alpha-ind').hidden=!model.keyboard.controls.left.some(key=>key[1]==='alpha');
-  $('#memory-ind').hidden=!model.variables.includes('M');
-  $('#angle-ind').textContent=calc.angle==='Deg'?'D':calc.angle==='Rad'?'R':'G';
-  $('#format-ind').textContent=model.baseKeys&&state.mode==='base'?({2:'BIN',8:'OCT',10:'DEC',16:'HEX'}[state.base]):model.family==='ti'?state.tiSettings.notation+(state.tiSettings.decimals===null?'':' '+state.tiSettings.decimals):state.format==='Norm'?(state.decimal?'Decimal':'Math'):state.format;
-  $('#mode-label').textContent=modes.find(m=>m[3]===state.mode)?.[0]||'计算';
+  if(model.nativeCw){
+    updateCWLCDStatus($('.cw-lcd-status'),state,calc.angle);
+    const contrast=state.cwSettings.contrast;
+    $('.screen-rim').style.setProperty('--cw-display-filter',contrast===5?'none':`contrast(${.65+contrast*.07})`);
+  }else{
+    $('#shift-ind').classList.toggle('muted',!state.shift);$('#alpha-ind').classList.toggle('muted',!state.alpha);
+    $('#memory-ind').classList.toggle('muted',!calc.vars.M);
+    $('#alpha-ind').hidden=!model.keyboard.controls.left.some(key=>key[1]==='alpha');
+    $('#memory-ind').hidden=!model.variables.includes('M');
+    $('#angle-ind').textContent=calc.angle==='Deg'?'D':calc.angle==='Rad'?'R':'G';
+    $('#format-ind').textContent=model.baseKeys&&state.mode==='base'?({2:'BIN',8:'OCT',10:'DEC',16:'HEX'}[state.base]):model.family==='ti'?state.tiSettings.notation+(state.tiSettings.decimals===null?'':' '+state.tiSettings.decimals):state.format==='Norm'?(state.decimal?'Decimal':'Math'):state.format;
+    $('#mode-label').textContent=modes.find(m=>m[3]===state.mode)?.[0]||'计算';
+  }
   $('.calculator').classList.toggle('off',state.off);
   $('.screen-rim').classList.toggle('cg-examination',model.family==='cg'&&state.cgExam?.active===true);
   let examIcon=$('#cg-exam-ind');if(model.family==='cg'&&state.cgExam?.active){if(!examIcon){examIcon=document.createElement('span');examIcon.id='cg-exam-ind';examIcon.textContent='EXAM';examIcon.setAttribute('aria-label','Examination Mode');$('.status').append(examIcon);}examIcon.style.animationDuration=cgExamElapsed(state.cgExam)>=900000?'2s':'1s';}else examIcon?.remove();
@@ -379,56 +441,230 @@ function status(){
 }
 function texRender(tex){try{return katex.renderToString(tex,{throwOnError:false,output:'htmlAndMathml',trust:false});}catch{return esc(tex);}}
 function cgResultProfile(value){const values=math.isMatrix(value)?value.toArray():value,items=Array.isArray(values)?values.flat(Infinity):[values];return state.cgWorkspace.system.complex==='real'&&items.some(item=>item&&typeof item==='object'&&typeof item.im==='number'&&item.im!==0)?{...state,cgWorkspace:{...state.cgWorkspace,system:{...state.cgWorkspace.system,complex:'a+bi'}}}:state;}
-function formatted(v,exactValue){if(model.family==='cg')return formatCGSetupValue(v,calc,cgResultProfile(v),exactValue);if(model.family==='ti')return tiDisplay(v,state.tiSettings,calc.factor());if(typeof v==='number'&&state.format==='Fix')return v.toFixed(state.digits);if(typeof v==='number'&&state.format==='Sci')return v.toExponential(Math.max(0,state.digits-1));return decimal(v);}
-function valueHTML(v,approximate=state.approximateAnswer,exactValue){if(v&&typeof v==='object'&&typeof v.tex==='string')return texRender(v.tex);if(typeof v==='string')return esc(v);const ti=model.family==='ti'&&(state.tiSettings.input==='classic'||state.tiSettings.notation!=='Norm'||state.tiSettings.decimals!==null||(math.isComplex(v)&&state.tiSettings.result==='polar'));if(model.family==='cg'){let profile=cgResultProfile(v);if(state.mixedAnswer!==null&&state.mixedAnswer!==undefined)profile={...profile,cgWorkspace:{...profile.cgWorkspace,system:{...profile.cgWorkspace.system,fracResult:state.mixedAnswer?'ab/c':'d/c'}}};return cgLineInput()||state.decimal||state.format!=='Norm'||approximate||state.cgWorkspace.system.engineering?esc(formatCGSetupValue(v,calc,profile,exactValue)):texRender(cgSetupFractionTex(v,calc,profile,exactValue));}return ti||state.decimal||state.format!=='Norm'||approximate?esc(formatted(v)):texRender(exactTex(v));}
-function setAnswer(value,approximate=false,exactValue=null){calc.assign('Ans',value,approximate,exactValue);state.answer=value;state.hasAnswer=true;state.approximateAnswer=approximate;state.cgSimpFactor=null;state.mixedAnswer=model.family==='cg'?null:false;}
-function extraScope(){if(model.family==='cg'){const native=cgExtraScope();return {...native,...state.matrices,...state.vectors,...createCGVectorScope(calc),rref:native.Rref,identity:native.Identity};}return {...state.matrices,...state.vectors,rref,unitVector:v=>math.divide(v,math.norm(v)),angleBetween:(a,b)=>{const n=math.norm(a)*math.norm(b);assert(n>0);return Math.acos(Math.max(-1,Math.min(1,math.dot(a,b)/n)))/calc.factor();},identity:n=>{assert(Number.isInteger(n)&&n>=1&&n<=(model.matrixMax||4));return math.identity(n);},MatAns:state.MatAns||[[0]],VctAns:state.VctAns||[0,0]};}
-function showCalc(focus=true){
+const cwLineInput=()=>state.cwSettings?.inputOutput.startsWith('line')===true;
+const cwDecimalOutput=()=>state.cwSettings?.inputOutput.endsWith('-decimal')===true;
+function formatted(v,exactValue){if(model.family==='cg')return formatCGSetupValue(v,calc,cgResultProfile(v),exactValue);if(model.family==='ti')return tiDisplay(v,state.tiSettings,calc.factor());if(state.cwSettings)return formatCWValue(v,calc,state,state.cwSettings.polar,exactValue)??decimal(v);if(typeof v==='number'&&state.format==='Fix')return v.toFixed(state.digits);if(typeof v==='number'&&state.format==='Sci')return v.toExponential(Math.max(0,state.digits-1));return decimal(v);}
+function cwValueHTML(value,approximate,exactValue){
+  const settings=state.cwSettings;
+  const conversion=state.cwConversion;
+  if(conversion==='factor')return texRender(primeFactorsTex(value));
+  if(conversion==='dms'||!conversion&&state.cwDmsDefault&&state.view==='calc'){
+    const text=cwSexagesimalText(value);
+    if(text!==null)return esc(text);
+  }
+  const mixed=conversion==='mixed'||conversion!=='improper'&&settings.mixedFractions;
+  const polar=conversion==='polar'||conversion!=='rect'&&settings.polar;
+  if(math.isComplex(value)){
+    const decimal=conversion==='decimal'||state.decimal&&!['rect','standard'].includes(conversion);
+    return cwComplexHTML(value,calc,state,texRender,{polar,exact:exactValue,mixed,approximate,decimal});
+  }
+  const exact=mixed?mixedTex(value):exactTex(value);
+  const text=formatCWValue(value,calc,state,polar,exactValue);
+  if(text===null)return texRender(exact);
+  const forceExact=['standard','mixed','improper','rect'].includes(conversion);
+  if(conversion==='decimal'||approximate||!forceExact&&(state.decimal||state.format!=='Norm'||settings.engineering))return cwNumericHTML(text);
+  if(state.cwRational&&state.cwManualSimplify&&state.mode==='calc'&&state.view==='calc'){
+    const fraction=formatCGRationalDisplay(state.cwRational,{simplify:'Manual',fracResult:mixed?'ab/c':'d/c',inputOutput:cwLineInput()?'Line':'Math',norm:settings.norm});
+    return cwLineInput()?esc(fraction.text.replaceAll('/','⌟')):texRender(fraction.latex);
+  }
+  const fraction=/^(-?)(\d*)\\frac\{(\d+)\}\{(\d+)\}$/.exec(exact);
+  const width=fraction?(fraction[2]?fraction[2].length+1:0)+fraction[3].length+fraction[4].length+1:0;
+  if(width>10 || exact.includes('\\pi')&&typeof value==='number'&&Math.abs(value)>=1e6)return cwNumericHTML(text);
+  if(cwLineInput())return fraction?esc(fraction[1]+(fraction[2]?fraction[2]+'⌟':'')+fraction[3]+'⌟'+fraction[4]):cwNumericHTML(text);
+  if((typeof value==='number'&&Number.isInteger(value))||!/[\\]/.test(exact)||exact.includes('\\times 10^'))return cwNumericHTML(text);
+  return texRender(exact);
+}
+function valueHTML(v,approximate=state.approximateAnswer,exactValue){if(v&&typeof v==='object'&&typeof v.tex==='string')return texRender(v.tex);if(typeof v==='string')return esc(v);if(state.cwSettings)return cwValueHTML(v,approximate,exactValue);const ti=model.family==='ti'&&(state.tiSettings.input==='classic'||state.tiSettings.notation!=='Norm'||state.tiSettings.decimals!==null||(math.isComplex(v)&&state.tiSettings.result==='polar'));if(model.family==='cg'){let profile=cgResultProfile(v);if(state.mixedAnswer!==null&&state.mixedAnswer!==undefined)profile={...profile,cgWorkspace:{...profile.cgWorkspace,system:{...profile.cgWorkspace.system,fracResult:state.mixedAnswer?'ab/c':'d/c'}}};return cgLineInput()||state.decimal||state.format!=='Norm'||approximate||state.cgWorkspace.system.engineering?esc(formatCGSetupValue(v,calc,profile,exactValue)):texRender(cgSetupFractionTex(v,calc,profile,exactValue));}return ti||state.decimal||state.format!=='Norm'||approximate?esc(formatted(v)):texRender(exactTex(v));}
+function setAnswer(value,approximate=false,exactValue=null){calc.assign('Ans',value,approximate,exactValue);state.answer=value;state.hasAnswer=true;state.approximateAnswer=approximate;state.cgSimpFactor=null;state.mixedAnswer=model.family==='cg'?null:false;state.cwConversion=null;state.cwExtraAnswer=null;state.cwExactAnswer=state.cwSettings?exactValue:null;state.cwDmsDefault=false;}
+function extraScope(){
+  if(model.family==='cg'){const native=cgExtraScope();return {...native,...state.matrices,...state.vectors,...createCGVectorScope(calc),rref:native.Rref,identity:native.Identity};}
+  const answers=model.nativeCw?{
+    ...(state.MatAns?{MatAns:state.MatAns}:{}),...(state.VctAns?{VctAns:state.VctAns}:{}),
+  }:{MatAns:state.MatAns||[[0]],VctAns:state.VctAns||[0,0]};
+  return {...state.matrices,...state.vectors,...answers,rref,
+    ...(state.mode==='stat'?state.cwStat?.scope:null),...(model.nativeCw&&state.mode==='vector'?{CWVectorMultiply:cwVectorMultiply}:null),
+    ...(model.nativeCw&&state.mode==='matrix'?{CWMatrixPower:cwMatrixPower}:null),
+    unitVector:v=>{const norm=math.norm(v);assert(norm>0);return math.divide(v,norm);},
+    angleBetween:(a,b)=>{const n=math.norm(a)*math.norm(b);assert(n>0);return Math.acos(Math.max(-1,Math.min(1,math.dot(a,b)/n)))/calc.factor();},
+    identity:n=>{assert(Number.isInteger(n)&&n>=1&&n<=(model.matrixMax||4));return math.identity(n);}};
+}
+function showCalc(focus=true,returnSelection=null){
   if(graphInsertionPending&&model.family==='cg'){showGraph();return;}
+  const returnCaret=state.cwReturnCaret??null;
+  state.cwReturnCaret=null;
   const metricMenu=cgNativeMenu?.kind==='metric'?{state:cgNativeMenu.getState(),parent:cgNativeMenu.parentMenu}:null;if(metricMenu)closeCGNativeMenu();
   closeGraph();
   $('#screen').classList.add('calculation-screen');
   state.view='calc';state.form=null;state.list=null;
   $('#screen').innerHTML='<div id="expression-host"></div><div class="answer" id="answer" aria-live="polite"></div>';
+  if(model.nativeCw)$('#answer').addEventListener('scroll',event=>syncCWAnswerScroll(event.currentTarget));
   let entry;
-  if(state.mode==='base'||cgLineInput()||model.family==='ti'&&state.tiSettings.input==='classic'){
-    entry=document.createElement('input');entry.id='entry';entry.className='entry';entry.value=state.expr;entry.setAttribute('aria-label','算式');
+  if(state.mode==='base'||cgLineInput()||cwLineInput()||model.family==='ti'&&state.tiSettings.input==='classic'){
+    entry=document.createElement(cwLineInput()&&state.mode!=='base'?'textarea':'input');entry.id='entry';entry.className='entry';entry.value=state.expr;entry.setAttribute('aria-label','算式');
+    if(entry.tagName==='TEXTAREA'){
+      entry.classList.add('cw-line-entry');entry.rows=state.cwSettings.smallFont?6:4;entry.spellcheck=false;
+    }
     if(model.family==='cg'&&state.mode!=='base'){cgLinearElement=entry;cgLinearEditor=createCGLinearEditor(entry,{source:state.expr,onChange:source=>{state.expr=source;state.latex='';state.hasAnswer=false;state.error='';state.eng=null;renderAnswer();}});}
-    else entry.addEventListener('input',()=>{state.expr=entry.value;state.hasAnswer=false;state.error='';renderAnswer();});
+    else entry.addEventListener('input',()=>{state.expr=entry.value;state.hasAnswer=false;state.error='';if(model.nativeCw){state.cwReplay=false;state.cwReplayAfterClear=null;}if(state.cwSettings&&state.pending.length){state.pending=[];status();}renderAnswer();});
   }else{
-    entry=createMathInput({id:'entry',label:'算式',value:state.latex||expressionToLatex(state.expr),latex:true,onInput:mf=>{
+    entry=createMathInput({id:'entry',label:'算式',value:state.latex||expressionToLatex(state.expr),latex:true,cwLCD:model.nativeCw,onInput:mf=>{
       // MathLive can notify without editing; retain the result/error in that case.
       if(state.latex===mf.value)return;
       state.latex=mf.value;try{state.expr=readInput(mf,inputContext());state.parseError='';}catch(e){state.expr='';state.parseError=e.message;}
-      state.hasAnswer=false;state.error='';state.eng=null;renderAnswer();
+      state.hasAnswer=false;state.error='';state.eng=null;if(model.nativeCw){state.cwReplay=false;state.cwReplayAfterClear=null;state.cwArgument=null;}
+      if(state.cwSettings&&state.pending.length){state.pending=[];status();}
+      renderAnswer();
     },onMove:direction=>{if(direction==='upward'||direction==='downward'){historyStep(direction==='upward'?-1:1);return true;}return false;}});
     entry.className='entry';state.latex=entry.value;
   }
-  entry.addEventListener('mount',()=>{if(focus&&$('#entry')===entry&&document.activeElement===document.body)focusEntry();},{once:true});
-  $('#expression-host').append(entry);renderAnswer();if(focus){focusEntry();requestAnimationFrame(()=>{if($('#entry')===entry&&document.activeElement===document.body)focusEntry();});}if(metricMenu)openCGMetricMenu(metricMenu.state,metricMenu.parent);status();
+  const openingValue=entry.value;
+  const restoreFocus=()=>{
+    if(entry.value!==openingValue){entry.focus({preventScroll:true});return;}
+    focusEntry(returnCaret);
+    if(returnCaret===null)restoreCWEntrySelection(entry,returnSelection);
+  };
+  entry.addEventListener('mount',()=>{if(focus&&$('#entry')===entry&&(returnCaret!==null||document.activeElement===document.body))restoreFocus();},{once:true});
+  if(model.nativeCw&&state.mode==='base'){
+    const header=document.createElement('div');header.className='cw-base-mode';header.textContent=`[${CW_BASE_LABELS[state.base]}]`;
+    $('#expression-host').append(header);
+  }
+  if(model.nativeCw)entry.addEventListener('pointerdown',()=>{if(!cwEngineeringActive())startCWReplay(null,false);});
+  $('#expression-host').append(entry);
+  if(model.nativeCw)cwEditHistory.attach(entry);
+  renderAnswer();
+  if(focus){restoreFocus();requestAnimationFrame(()=>{if($('#entry')===entry&&document.activeElement===document.body)restoreFocus();});}
+  if(metricMenu)openCGMetricMenu(metricMenu.state,metricMenu.parent);
+  status();
 }
 function renderPreview(){if(!$('#preview'))return;try{let expr=state.expr;if(!expr){$('#preview').innerHTML='';return;}$('#preview').innerHTML=texRender(math.parse(normalize(expr)).toTex({parenthesis:'auto',implicit:'hide'}));}catch{$('#preview').textContent='';}}
-function renderAnswer(){const el=$('#answer');if(!el)return;el.classList.remove('error');el.style.textAlign=model.family==='cg'&&typeof state.answer==='string'?'left':'';if(state.error){el.textContent=state.error;el.classList.add('error');return;}el.innerHTML=state.hasAnswer?`${state.approximateAnswer&&model.family!=='cg'?'<span class="approximation" aria-label="近似结果">≈ </span>':''}${state.eng!==null&&typeof state.answer==='number'?texRender(`${decimal(state.answer/10**state.eng)}\\times10^{${state.eng}}`):state.mode==='base'?esc(baseFormat(state.answer,state.base)):model.family!=='cg'&&state.mixedAnswer&&!state.approximateAnswer&&!state.decimal&&state.format==='Norm'?texRender(mixedTex(state.answer)):valueHTML(state.answer,state.approximateAnswer,calc.exactAnswer)}`+(state.cgSimpFactor?'<span class="cg-simp-factor">F='+esc(state.cgSimpFactor)+'</span>':''):'';}
-function focusEntry(){const el=$('#entry');if(el){el.focus();if(isMathInput(el))el.position=el.lastOffset;else el.setSelectionRange(el.value.length,el.value.length);}}
-function historyStep(step){state.historyIndex=Math.max(0,Math.min(state.history.length-1,(state.historyIndex<0?state.history.length:state.historyIndex)+step));const h=state.history[state.historyIndex];if(h){state.expr=h.expr;state.latex=h.latex||expressionToLatex(h.expr);state.hasAnswer=false;state.error='';showCalc();}}
-function remember(){state.undo.push(state.expr);if(state.undo.length>100)state.undo.shift();}
+function cwEngineeringActive(){
+  return model.nativeCw&&state.view==='calc'&&state.hasAnswer&&state.cwEngEditing===true;
+}
+function syncCWAnswerScroll(answer){
+  if(!answer)return;
+  const maximum=Math.max(0,answer.scrollWidth-answer.clientWidth);
+  answer.parentElement.toggleAttribute('data-cw-answer-left',answer.scrollLeft>1);
+  answer.parentElement.toggleAttribute('data-cw-answer-right',maximum-answer.scrollLeft>1);
+}
+function setAnswerMarkup(answer,markup){
+  answer.innerHTML=model.nativeCw&&markup?'<span class="cw-answer-content">'+markup+'</span>':markup;
+  if(model.nativeCw){
+    answer.scrollLeft=answer.scrollWidth;
+    syncCWAnswerScroll(answer);
+  }
+}
+function scrollCWAnswer(action){
+  const answer=$('#answer');
+  if(!answer||answer.scrollWidth-answer.clientWidth<=1)return false;
+  const distance=Math.max(4,Math.round(parseFloat(getComputedStyle(answer).fontSize)*11/16));
+  answer.scrollLeft+=action==='left'?-distance:distance;
+  syncCWAnswerScroll(answer);
+  return true;
+}
+function renderAnswer(){
+  const el=$('#answer');
+  if(!el)return;
+  const engineering=cwEngineeringActive(),entry=$('#entry');
+  if(model.nativeCw){
+    if(entry){
+      if(entry.readOnly!==engineering)entry.readOnly=engineering;
+      entry.toggleAttribute('data-cw-readout',state.hasAnswer&&!state.error);
+      entry.toggleAttribute('data-cw-structured',isMathInput(entry)&&/\\(?:dfrac|tfrac|frac|sqrt|sum|int|begin)\b/.test(state.latex));
+    }
+    updateCWLCDStatus($('.cw-lcd-status'),state,calc.angle);
+  }
+  el.classList.remove('error');
+  el.style.textAlign=model.family==='cg'&&typeof state.answer==='string'?'left':'';
+  if(state.error){setAnswerMarkup(el,esc(state.error));el.classList.add('error');return;}
+  if(state.hasAnswer&&state.cwExtraAnswer){setAnswerMarkup(el,esc(state.cwExtraAnswer));return;}
+  const approximation=state.approximateAnswer&&model.family!=='cg'?'<span class="approximation" aria-label="近似结果">≈ </span>':'';
+  if(state.hasAnswer&&model.nativeCw&&state.eng!==null&&typeof state.answer==='number'){
+    const shift=engineering?'<span class="cw-eng-indicator" aria-label="工程记数法移位">⇄</span>':'';
+    setAnswerMarkup(el,approximation+cwNumericHTML(formatCWEngineering(state.answer,state,state.eng,state.cwExactAnswer))+shift);
+    return;
+  }
+  setAnswerMarkup(el,state.hasAnswer?`${approximation}${state.eng!==null&&typeof state.answer==='number'?texRender(`${decimal(state.answer/10**state.eng)}\\times10^{${state.eng}}`):state.mode==='base'?esc((model.nativeCw?cwBaseFormat:baseFormat)(state.answer,state.base)):model.family!=='cg'&&state.mixedAnswer&&!state.approximateAnswer&&!state.decimal&&state.format==='Norm'?texRender(mixedTex(state.answer)):valueHTML(state.answer,state.approximateAnswer,model.nativeCw?state.cwExactAnswer:calc.exactAnswer)}`+(state.cgSimpFactor?'<span class="cg-simp-factor">F='+esc(state.cgSimpFactor)+'</span>':''):'');
+}
+function focusEntry(caret=null){
+  const el=$('#entry');if(!el)return;
+  el.focus();
+  if(isMathInput(el))el.position=Math.min(caret??el.lastOffset,el.lastOffset);
+  else {const position=Math.min(caret??el.value.length,el.value.length);el.setSelectionRange(position,position);}
+}
+function recordHistory(answer){
+  if(model.nativeCw&&!['calc','complex','base'].includes(state.mode))return;
+  const entry={expr:state.expr,latex:state.latex,answer,mode:state.mode};
+  if(model.nativeCw)cwHistoryValues.set(entry,{answer:state.answer,decimal:state.decimal,approximateAnswer:state.approximateAnswer,cwExtraAnswer:state.cwExtraAnswer,cwExactAnswer:state.cwExactAnswer,cwDmsDefault:state.cwDmsDefault,cwRational:state.cwRational,cwVerifyRhs:state.cwVerifyRhs});
+  state.history.push(entry);
+  state.history=state.history.slice(-(model.family==='cg'?30:100));
+  state.historyIndex=state.history.length-(model.nativeCw?1:0);
+  if(model.nativeCw)state.cwReplay=false;
+}
+function historyStep(step){
+  state.historyIndex=Math.max(0,Math.min(state.history.length-1,(state.historyIndex<0?state.history.length:state.historyIndex)+step));
+  const entry=state.history[state.historyIndex];
+  if(!entry)return;
+  state.expr=entry.expr;state.latex=entry.latex||expressionToLatex(entry.expr);state.hasAnswer=false;state.error='';
+  if(model.nativeCw){
+    const number=Number(entry.answer);
+    Object.assign(state,cwHistoryValues.get(entry)??{answer:Number.isFinite(number)?number:entry.answer,approximateAnswer:false,cwExtraAnswer:null,cwExactAnswer:null,cwDmsDefault:false,cwRational:null,cwVerifyRhs:''});
+    state.hasAnswer=true;state.cwConversion=null;state.eng=null;
+    state.cwReplay=true;state.cwArgument=null;state.cwReplayAfterClear=null;cwEditHistory.clear();
+  }
+  showCalc();
+}
+function remember(){if(model.nativeCw)return;state.undo.push(state.expr);if(state.undo.length>100)state.undo.shift();}
 function insert(text,caret=null){
   if(appPanel?.insert?.(text)||graphPanel?.insert?.(text))return;
+  const postfix=model.nativeCw?cwPostfixCommand(text)??cwUnitCommand(text):null;
+  const nativePostfix=!!postfix||model.nativeCw&&['perm','comb','CWRemainder','!','%','CWVectorDot','polar-angle'].includes(text);
+  if(state.cwVerify&&state.view==='calc'&&cwRelations.includes(text)&&state.hasAnswer){
+    state.expr=state.cwVerifyRhs;
+    state.latex=expressionToLatex(state.expr);
+    state.hasAnswer=false;showCalc();
+  }
   let el=document.activeElement;
   if(graphPanel&&!el?.matches('#screen input,#screen textarea,#screen math-field')){graphPanel.edit();graphPanel.focusEntry();el=document.activeElement;}
   if(!el?.matches('#screen input,#screen textarea,#screen math-field')){if(state.view!=='calc')showCalc();el=$('#entry');}
   if(!el)return;
+  if(model.nativeCw&&el.id==='entry')cwEditHistory.capture(el);
   if(el===cgLinearElement&&cgLinearEditor){if(state.hasAnswer){cgLinearEditor.setSource(/^[+*/^-]/.test(text)?'Ans':'');state.hasAnswer=false;state.error='';}text=({frac:'/',root:'nthRoot(',mixed:'(','mixed-input':'('})[text]||text;remember();cgLinearEditor.insertText(text);return;}
   if(isMathInput(el)){
-    if(el.id==='entry'&&state.hasAnswer){el.value=/^[+*/^-]/.test(text)?'\\mathrm{Ans}':'';state.hasAnswer=false;state.error='';}
-    const latex=(text==='log('&&['ti','cg'].includes(model.family)?String.raw`\log\left(#?\right)`:null)||(state.mode==='vector'&&model.vectorLabels?.[text]?String.raw`\vec{${model.vectorLabels[text]}}`:null)||keyLatex[text]||(/^[A-Za-z]+\($/.test(text)?'\\operatorname{'+text.slice(0,-1)+'}\\left(#?\\right)':expressionToLatex(text));
+    if(el.id==='entry'&&state.hasAnswer){el.value=/^[+*/^-]/.test(text)||nativePostfix||state.cwStat&&CW_STAT_POSTFIX.has(text)?'\\mathrm{Ans}':'';state.hasAnswer=false;state.error='';}
+    const cwArray=state.cwSettings&&/^(?:Mat|Vct)(?:[A-D]|Ans)$/.test(text)?`\\operatorname{${text}}`:null;
+    const cwCommand=state.cwSettings?(text===':'?':':text==='CWVectorDot'?'\\CWVectorDot ':/^→[A-Fxyz]$/.test(text)?'\\to '+text.slice(1):cwArray):null;
+    const latex=(postfix?'\\'+postfix.name+' ':null)||(state.cwVerify?cwRelationLatex[text]:null)||cwCommand||(model.nativeCw?cwExpressionKeys[text]:null)||(state.cwStat?cwStatLatex(text):null)||(text==='log('&&['ti','cg'].includes(model.family)?String.raw`\log\left(#?\right)`:null)||(state.mode==='vector'&&model.vectorLabels?.[text]?String.raw`\vec{${model.vectorLabels[text]}}`:null)||keyLatex[text]||(/^[A-Za-z]+\($/.test(text)?'\\operatorname{'+text.slice(0,-1)+'}\\left(#?\\right)':expressionToLatex(text));
+    const argument=model.nativeCw?state.cwArgument:null;
+    if(model.nativeCw)state.cwArgument=null;
+    if(argument&&cwArgumentMatches(el,argument)){
+      const template=cwArgumentTemplate(text,latex);
+      if(template){insertIntoMath(el,template);return;}
+      el.position=argument.start;
+    }
     insertIntoMath(el,latex);return;
   }
   if(xSolvePanel||model.family==='ti'&&state.tiSettings.input==='classic')text=({frac:'/',root:'nthRoot(',mixed:'(','mixed-input':'('})[text]||text;
-  if(el.id==='entry'&&state.hasAnswer){el.value=/^[+*/^-]/.test(text)?'Ans':'';state.hasAnswer=false;state.error='';el.setSelectionRange(el.value.length,el.value.length);}
-  if(el.id==='entry')remember();const start=el.selectionStart??el.value.length,end=el.selectionEnd??start;el.setRangeText(text,start,end,'end');if(caret!==null)el.setSelectionRange(start+caret,start+caret);el.focus();el.dispatchEvent(new Event('input',{bubbles:true}));
+  if(cwLineInput()){
+    if(el.id==='entry'&&state.cwStat&&CW_STAT_POSTFIX.has(text)){
+      text=`${text}(${state.hasAnswer?'Ans':el.value})`;
+      state.hasAnswer=false;
+      el.select();
+    }else text=postfix?.text??postfix?.label??cwDataKeyText(text)??text;
+  }
+  if(el.id==='entry'&&state.hasAnswer){const continuing=/^[+*/^-]/.test(text)||nativePostfix||model.nativeCw&&state.mode==='base'&&/^ (AND|OR|XOR|XNOR) /.test(text);el.value=continuing?'Ans':'';state.hasAnswer=false;state.error='';el.setSelectionRange(el.value.length,el.value.length);}
+  if(el.id==='entry')remember();
+  const start=el.selectionStart??el.value.length;
+  let end=el.selectionEnd??start;
+  if(model.nativeCw&&cwLineInput()&&state.overwrite&&el.id==='entry'&&start===end)end=Math.min(el.value.length,end+1);
+  el.setRangeText(text,start,end,'end');if(caret!==null)el.setSelectionRange(start+caret,start+caret);el.focus();el.dispatchEvent(new Event('input',{bubbles:true}));
 }
-function setExpr(s){remember();state.expr=s;state.latex=expressionToLatex(s);state.hasAnswer=false;state.error='';state.pending=[];showCalc();}
+function setExpr(s){
+  const previous=model.nativeCw?cwEntrySnapshot($('#entry')):null;
+  remember();state.expr=s;state.latex=expressionToLatex(s);state.hasAnswer=false;state.error='';state.pending=[];
+  if(model.nativeCw){state.historyIndex=state.history.length;state.cwReplay=false;state.cwReplayAfterClear=null;state.cwArgument=null;}
+  showCalc();
+  if(model.nativeCw)cwEditHistory.record(previous,cwEntrySnapshot($('#entry')));
+}
 function executeCGSimp(source){
   const match=/^(.+?)\s+Simp(?:\s+(.+))?$/i.exec(source.trim());if(!match)return null;
   const unwrap=text=>{let value=text.trim();while(value.startsWith('(')&&value.endsWith(')'))value=value.slice(1,-1).trim();return value;};
@@ -439,9 +675,29 @@ function executeCGSimp(source){
   const result=simplifyCGRational(exact,{divisor,simplify:settings.simplify,complex:settings.complex,inputOutput:settings.inputOutput,fracResult:settings.fracResult,mode:state.format,digits:state.digits,norm:settings.norm});
   return {value:calc.vars.Ans,exact:result.answer,factor:result.factor};
 }
-function execute(){
+function executeCWSimp(source){
+  const match=/^(.+?)\s+Simp(?:\s+(.+))?$/i.exec(source.trim());
+  if(!match)return null;
+  assert(state.cwManualSimplify&&state.mode==='calc','语法错误');
+  const base=match[1].replace(/^\((.*)\)$/,'$1').trim();
+  const rational=base==='Ans'?state.cwRational:evaluateCGRationalExpression(match[1],{variables:calc.vars});
+  assert(rational,'无法化简');
+  const divisor=match[2]?.replace(/^\((.*)\)$/,'$1').trim();
+  if(divisor!==undefined)assert(/^\+?\d+$/.test(divisor),'无法化简');
+  const simplified=simplifyCGRational(rational,{divisor});
+  return {value:Number(simplified.answer.n)/Number(simplified.answer.d),rational:simplified.answer,factor:simplified.factor};
+}
+function execute(forceDecimal=false){
   if(model.family==='cg'&&state.cgClipSelecting){cgFunctionKey(1);return;}
-  if(state.view==='menu'){chooseMode(state.selected);return;}if(state.view==='list'){rememberMenuSelection();state.list.items[state.selected]?.run();return;}if(state.view==='form'){formNext();return;}if(state.view==='result'){back();return;}
+  if(state.view==='menu'){chooseMode(state.selected);return;}
+  if(state.view==='list'){
+    rememberMenuSelection();
+    try{state.list.items[state.selected]?.run();}
+    catch(error){if(!model.nativeCw)throw error;cwErrorScreen(error.message);}
+    return;
+  }
+  if(state.view==='form'){formNext();return;}if(state.view==='result'){back();return;}
+  if(state.cwConversion&&state.hasAnswer&&!forceDecimal){state.cwConversion=null;state.eng=null;renderAnswer();return;}
   let nativeResult;try{
     if($('#entry')){if(isMathInput($('#entry')))state.latex=$('#entry').value;state.expr=readInput($('#entry'),inputContext());}
     if(model.family==='cg'&&state.cgExam?.active)assert(!state.pending.length&&!/[:\r\n◢]/.test(state.expr),'Examination Mode: program commands are disabled');
@@ -449,30 +705,184 @@ function execute(){
     assert(state.expr.trim(),'请输入算式');
     // Like a handheld calculator, complete trailing open parentheses at execution.
     if(state.mode!=='base'){let depth=0,quote='';for(const ch of state.expr){if(ch==='"'||ch==="'"){quote=quote===ch?'':quote||ch;}if(!quote){if(ch==='(')depth++;else if(ch===')')depth--;}}if(depth>0)state.expr+=')'.repeat(depth);}
-    state.cgSimpFactor=null;const simpResult=model.family==='cg'?executeCGSimp(state.expr):null;
-    let v;if(simpResult)v=simpResult.value;else if(state.mode==='base')v=baseCalculate(state.expr,state.base,calc.vars.Ans);else if(model.family==='cg'&&(cgLineInput()||state.expr.includes('→')||/\b(?:SolveN?|FMin|FMax|Sigma|diff2?|integral|CGSolveN?|CGFMin|CGFMax|CGSum|CGIntegral)\s*\(/.test(state.expr)||/\b(?:List(?:[1-9]|1\d|2[0-6]|Ans)|(?:Mat|Vct)(?:[A-Z]|Ans))\s*\[/.test(state.expr)||/^(?:Fill|SortA|SortD|ClrMat|ClrVct|ClrList)\b/.test(state.expr))){nativeResult=executeCGNativeCalculation(state.expr);v=nativeResult.noValue?{tex:'\\mathrm{Done}'}:nativeResult.value;}else v=calc.evaluate(state.expr,extraScope(),state.mode==='complex');
-    state.approximateAnswer=state.mode==='base'?false:simpResult?calc.approximateVariables.has('Ans'):nativeResult?nativeResult.approximate===true:calc.lastEvaluationApproximate;const exact=simpResult?simpResult.exact:nativeResult?nativeResult.snapshot.exactAnswer:calc.lastExactResult;if(typeof v==='number'||math.isComplex(v)||Array.isArray(v)||math.isMatrix(v))calc.assign('Ans',v,state.approximateAnswer,exact??null);state.cgSimpFactor=simpResult?.factor?.toString()||null;state.answer=v;state.hasAnswer=true;state.error='';state.eng=null;state.mixedAnswer=model.family==='cg'?null:false;
-    if(state.mode==='matrix')state.MatAns=v;if(state.mode==='vector')state.VctAns=v;
-    state.history.push({expr:state.expr,latex:state.latex,answer:nativeResult?.noValue?'Done':typeof v==='string'?v:decimal(v),mode:state.mode});state.history=state.history.slice(-(model.family==='cg'?30:100));state.historyIndex=state.history.length;persist();showCalc();if(nativeResult?.graphics.length)showCGRunGraphics(nativeResult.graphics);if(!simpResult&&calc.cgNumericalNotice)showCGCalculationNotice(calc.cgNumericalNotice);
-  }catch(e){nativeResult?.rollback?.();state.error=e.message||'数学错误';state.hasAnswer=false;renderAnswer();}
+    if(state.cwVerify){
+      const {truth,rhs}=verifyCWExpression(state.expr,source=>{
+        const value=calc.evaluate(cwLineInput()?prepareCWLinearInput(source):source,extraScope(),state.mode==='complex');
+        return {value,exact:calc.lastExactResult};
+      });
+      calc.assign('Ans',Number(truth));state.cwVerifyRhs=rhs;
+      state.answer=truth?'True':'False';state.hasAnswer=true;state.approximateAnswer=false;state.error='';
+      state.cwExtraAnswer=null;state.cwExactAnswer=null;state.cwDmsDefault=false;recordHistory(state.answer);
+      persist();renderAnswer();return;
+    }
+    const storeCommand=state.cwSettings&&state.expr.includes('→')?/^(.+)→([A-Fxyz])$/.exec(state.expr):null;
+    if(state.cwSettings&&state.expr.includes('→'))assert(storeCommand,'语法错误');
+    state.cgSimpFactor=null;state.cwExtraAnswer=null;
+    const simpResult=model.family==='cg'?executeCGSimp(state.expr):state.cwSettings?executeCWSimp(state.expr):null;
+    const rawSource=storeCommand?.[1]??state.expr;
+    const source=model.nativeCw&&cwLineInput()?prepareCWLinearInput(rawSource):rawSource;
+    const transformed=model.nativeCw&&state.mode==='vector'?cwVectorExpression(source):model.nativeCw&&state.mode==='matrix'?cwMatrixExpression(source):source;
+    const remainder=model.nativeCw&&/^CWRemainder\(/.test(source)?math.parse(source):null;
+    let v,exact=null,approximate=false;
+    if(simpResult){
+      v=simpResult.value;exact=simpResult.exact;approximate=model.family==='cg'&&calc.approximateVariables.has('Ans');
+    }else if(state.mode==='base'){
+      v=model.nativeCw?cwBaseCalculate(state.expr,state.base,calc.vars):baseCalculate(state.expr,state.base,calc.vars.Ans);
+    }else if(model.family==='cg'&&(cgLineInput()||state.expr.includes('→')||/\b(?:SolveN?|FMin|FMax|Sigma|diff2?|integral|CGSolveN?|CGFMin|CGFMax|CGSum|CGIntegral)\s*\(/.test(state.expr)||/\b(?:List(?:[1-9]|1\d|2[0-6]|Ans)|(?:Mat|Vct)(?:[A-Z]|Ans))\s*\[/.test(state.expr)||/^(?:Fill|SortA|SortD|ClrMat|ClrVct|ClrList)\b/.test(state.expr))){
+      nativeResult=executeCGNativeCalculation(state.expr);
+      v=nativeResult.noValue?{tex:'\\mathrm{Done}'}:nativeResult.value;
+      exact=nativeResult.snapshot.exactAnswer;approximate=nativeResult.approximate===true;
+    }else if(remainder?.isFunctionNode&&remainder.fn.name==='CWRemainder'&&remainder.args.length===2){
+      const result=cwRemainder(...remainder.args.map(argument=>number(argument.toString())));
+      v=result.value;approximate=calc.isApproximate(source);
+      if(result.remainder!==null)state.cwExtraAnswer=`${formatted(v)}  R=${formatted(result.remainder)}`;
+    }else{
+      v=calc.evaluate(transformed,extraScope(),state.mode==='complex');
+      exact=calc.lastExactResult;approximate=calc.lastEvaluationApproximate;
+    }
+    if(model.nativeCw&&Array.isArray(v)&&v.length===2&&v.every(Number.isFinite)&&/^(Pol|Rec)\s*\(/.test(source)){
+      const polar=source.startsWith('Pol');
+      calc.assign('x',v[0],true);calc.assign('y',v[1],true);
+      state.cwExtraAnswer=`${polar?'r':'x'}=${formatted(v[0])}  ${polar?'θ':'y'}=${formatted(v[1])}`;
+      v=v[0];approximate=true;exact=null;
+    }
+    if(storeCommand){assert(typeof v==='number'||math.isComplex(v),'数学错误');calc.assign(storeCommand[2],v,approximate,exact);}
+    if(model.nativeCw&&['matrix','vector'].includes(state.mode)&&(Array.isArray(v)||math.isMatrix(v))){
+      const value=math.isMatrix(v)?v.toArray():v;
+      if(state.mode==='matrix'){calc.checkMatrix(value);state.MatAns=value;}
+      else{calc.checkVector(value);state.VctAns=value;}
+      state.hasAnswer=false;state.error='';persist();showCWArrayResult(cwContext(),value);return;
+    }
+    state.approximateAnswer=approximate;
+    if(typeof v==='number'||math.isComplex(v)||Array.isArray(v)||math.isMatrix(v))calc.assign('Ans',v,approximate,exact??null);
+    state.cgSimpFactor=simpResult?.factor?.toString()||null;state.answer=v;state.hasAnswer=true;state.error='';state.eng=null;state.mixedAnswer=model.family==='cg'?null:false;
+    if(state.cwSettings){
+      state.decimal=!simpResult&&(forceDecimal||cwDecimalOutput()||/\bCWConvertUnits\(/.test(source));
+      state.cwConversion=null;state.cwRational=null;state.cwExactAnswer=exact;
+      state.cwDmsDefault=typeof v==='number'&&!forceDecimal&&/\bdms\s*\(/.test(source);
+      if(cwLineInput()&&state.mode!=='base'&&!simpResult&&!storeCommand&&source===rawSource)state.expr=prepareCWImplicitDivision(rawSource,true);
+      if(state.cwManualSimplify&&state.mode==='calc'&&!state.approximateAnswer&&!storeCommand){
+        try {state.cwRational=simpResult?.rational??evaluateCGRationalExpression(state.expr,{variables:calc.vars});}
+        catch {/* The numerical result is still valid when exact tracking exceeds its limits. */}
+      }
+    }
+    if(!model.nativeCw){if(state.mode==='matrix')state.MatAns=v;if(state.mode==='vector')state.VctAns=v;}
+    recordHistory(nativeResult?.noValue?'Done':typeof v==='string'?v:decimal(v));persist();showCalc();if(nativeResult?.graphics.length)showCGRunGraphics(nativeResult.graphics);if(!simpResult&&calc.cgNumericalNotice)showCGCalculationNotice(calc.cgNumericalNotice);
+  }catch(e){nativeResult?.rollback?.();state.hasAnswer=false;if(model.nativeCw)cwErrorScreen(e.message||'数学错误');else{state.error=e.message||'数学错误';renderAnswer();}}
+}
+function cwErrorScreen(message){
+  const entry=$('#entry');
+  let caret=isMathInput(entry)?entry.position:entry?.selectionStart;
+  if(message==='数学错误'&&entry){
+    if(isMathInput(entry)&&/\\div\s*0/.test(entry.value)){
+      for(let offset=0;offset<Math.min(entry.lastOffset-1,300);offset++){
+        const operator=entry.getValue(offset,offset+1,'latex').trim();
+        const operand=entry.getValue(offset+1,offset+2,'latex').trim();
+        if(operator==='\\div'&&operand==='0'){caret=offset+1;break;}
+      }
+    }else if(!isMathInput(entry)){
+      const zero=/[\/÷]\s*(?=0(?:\D|$))/.exec(entry.value);
+      if(zero)caret=zero.index+zero[0].length;
+    }
+  }
+  const finish=()=>{
+    if(entry&&caret!=null)state.cwReturnCaret=caret;
+    back();
+  };
+  showCWScreen(createCWPages({label:'错误',pages:[{label:message,value:''}],renderValue:esc,onFinish:finish,
+    onCommand(action){if(action==='left'||action==='right'){finish();return true;}return false;},
+  }));
 }
 function rememberMenuSelection(){if(state.view==='list'&&state.list)state.menuSelections[`${state.mode}:${state.list.title}`]=state.selected;}
-function push(){rememberMenuSelection();if(state.view==='form'&&$('#parameters')){const values=formValues();state.form.fields.forEach(f=>f.value=values[f.name]);}state.stack.push({view:state.view,form:state.form,list:state.list,selected:state.selected});if(state.stack.length>20)state.stack.shift();}
-function back(){if(cgNativeMenu){cgNativeMenu.back();return;}state.error='';if(graphPanel&&state.view==='graph'){if(!graphPanel.back?.())graphPanel.edit();return;}const prev=state.stack.pop();if(!prev){if(state.mode==='spreadsheet')menu(false);else if(state.mode==='distribution')distributionMenu();else showCalc();return;}if(prev.view==='list')list(prev.list.title,prev.list.items,false,prev.selected);else if(prev.view==='menu')menu(false,prev.selected);else if(prev.view==='form')form(prev.form.title,prev.form.fields,prev.form.submit,false,prev.form.layout);else if(prev.view==='cg-app')showCGApplication(state.mode);else if(prev.view==='x-solve')xSolve();else if(prev.view==='spreadsheet'&&model.spreadsheet)showSpreadsheet();else if(prev.view==='graph'&&model.graphing)showGraph();else showCalc();}
-function menu(save=true,selected=null){if(save)push();closeCGNativeMenu();closeGraph();selected??=Math.max(0,menuModes().findIndex(m=>m[3]===state.mode));state.view='menu';state.selected=selected;state.list=null;state.form=null;$('#screen').innerHTML=model.family==='cw'?cwHomeHTML(modes,selected):['x','ex'].includes(model.family)?classwizMenuHTML(modes,selected):`<div class="mode-grid ${model.nativeMenu?'native-menu-grid':''}">${menuModes().map((m,i)=>`<button class="mode-tile ${i===selected?'selected':''}" data-mode="${i}"><span class="symbol">${esc(m[2])}</span><span><small>${m[1]}</small> ${m[0]}</span></button>`).join('')}</div>`;highlight();}
+function push(){
+  rememberMenuSelection();
+  if(state.view==='form'&&$('#parameters')){const values=formValues();state.form.fields.forEach(f=>f.value=values[f.name]);}
+  const cwSelection=model.nativeCw&&state.view==='calc'?cwEntrySnapshot($('#entry')):null;
+  state.stack.push({view:state.view,form:state.form,list:state.list,selected:state.selected,cwScreen:state.view==='cw-screen'?state.cwScreen:null,cwSelection});
+  if(state.stack.length>20)state.stack.shift();
+}
+function back(){
+  if(cgNativeMenu){cgNativeMenu.back();return;}
+  state.error='';
+  if(graphPanel&&state.view==='graph'){if(!graphPanel.back?.())graphPanel.edit();return;}
+  const prev=state.stack.pop();
+  if(!prev){
+    if(state.mode==='spreadsheet')menu(false);
+    else if(state.mode==='distribution')distributionMenu();
+    else showCalc();
+    return;
+  }
+  if(prev.view==='list')list(prev.list.title,prev.list.items,false,prev.selected,prev.list.native,prev.list.heading);
+  else if(prev.view==='menu')menu(false,prev.selected);
+  else if(prev.view==='form')form(prev.form.title,prev.form.fields,prev.form.submit,false,prev.form.layout);
+  else if(prev.view==='cg-app')showCGApplication(state.mode);
+  else if(prev.view==='x-solve')xSolve();
+  else if(prev.view==='spreadsheet'&&model.spreadsheet)showSpreadsheet();
+  else if(prev.view==='cw-distribution')showCWDistribution();
+  else if(prev.view==='cw-screen')showCWScreen(prev.cwScreen,false);
+  else if(prev.view==='graph'&&model.graphing)showGraph();
+  else showCalc(true,prev.cwSelection);
+}
+function menu(save=true,selected=null){if(save)push();closeCGNativeMenu();closeGraph();selected??=Math.max(0,menuModes().findIndex(m=>m[3]===state.mode));state.view='menu';state.selected=selected;state.list=null;state.form=null;$('#screen').innerHTML=model.family==='cw'?cwHomeHTML(modes,selected,model.nativeCw):['x','ex'].includes(model.family)?classwizMenuHTML(modes,selected):`<div class="mode-grid ${model.nativeMenu?'native-menu-grid':''}">${menuModes().map((m,i)=>`<button class="mode-tile ${i===selected?'selected':''}" data-mode="${i}"><span class="symbol">${esc(m[2])}</span><span><small>${m[1]}</small> ${m[0]}</span></button>`).join('')}</div>`;highlight();}
 function chooseMode(index){const entry=menuModes()[index];if(!entry)return;if(!entry[3]){unavailable(entry[0]);return;}activateMode(entry[3]);}
-function list(title,items,save=true,selected=null){if(save)push();closeGraph();selected??=state.menuSelections[`${state.mode}:${title}`]??0;selected=Math.max(0,Math.min(items.length-1,selected));state.view='list';state.list={title,items};state.form=null;state.selected=selected;$('#screen').innerHTML=`<div class="screen-heading">${esc(title)}<span class="screen-hint">↑↓ = · Esc 返回</span></div><div>${items.map((item,i)=>`<button class="list-item ${i===selected?'selected':''}" data-list="${i}"><span class="idx">${i<9?i+1:''}</span>${esc(item.label)}${item.formula?`<span class="menu-formula">${texRender(item.formula)}</span>`:''}</button>`).join('')}</div>`;highlight();}
+function list(title,items,save=true,selected=null,native=false,displayHeading=false){
+  if(save)push();closeGraph();
+  selected??=state.menuSelections[`${state.mode}:${title}`]??0;
+  selected=Math.max(0,Math.min(items.length-1,selected));
+  state.view='list';state.list={title,items,native,heading:displayHeading};state.form=null;state.selected=selected;
+  const heading=native?(displayHeading?`<div class="cw-list-heading">${esc(displayHeading===true?title:displayHeading)}</div>`:''):`<div class="screen-heading">${esc(title)}<span class="screen-hint">↑↓ = · Esc 返回</span></div>`;
+  $('#screen').innerHTML=`${heading}<div class="${native?'cw-data-menu':''}" aria-label="${esc(title)}">${items.map((entry,i)=>`<button class="list-item ${i===selected?'selected':''}" data-list="${i}">${native?(entry.checked===undefined?'':`<span aria-hidden="true">${entry.checked?'●':'○'}</span> `):`<span class="idx">${i<9?i+1:''}</span>`}${esc(entry.label)}${entry.submenu?'<span class="cw-menu-arrow" aria-hidden="true">▸</span>':''}${entry.formula?`<span class="menu-formula">${texRender(entry.formula)}</span>`:''}</button>`).join('')}</div>`;
+  highlight();
+}
+function cwDataList(title,items,selected=null,heading=false){list(title,items,true,selected,true,heading);}
+function cwSubmenu(label,run){return {...item(label,run),submenu:true};}
+function cwChoices(title,choices,current,apply){
+  cwDataList(title,choices.map(([label,value])=>({
+    ...item(label,()=>{apply(value);persist();status();back();}),checked:value===current,
+  })),choices.findIndex(([,value])=>value===current));
+}
+function showCWScreen(panel,save=true){
+  if(save)push();
+  closeGraph();
+  state.view='cw-screen';state.cwScreen=panel;state.list=null;state.form=null;
+  panel.mount($('#screen'));
+  status();
+}
+function cwNumber(source){
+  const text=source.trim();
+  assert(text,'请输入算式');
+  const depth=(text.match(/\(/g)?.length??0)-(text.match(/\)/g)?.length??0);
+  return number(prepareCWLinearInput(text+')'.repeat(Math.max(0,depth))));
+}
+function cwContext(){
+  return {
+    calculator:calc,profile:state,screen:showCWScreen,list:cwDataList,item,submenu:cwSubmenu,choices:cwChoices,
+    back,home:()=>menu(),closeMenu:closeCWMenu,persist,status,insert,
+    calculation(reset=true,clearStack=false){if(reset)Object.assign(state,{expr:'',latex:'',hasAnswer:false,error:''});if(clearStack)state.stack=[];showCalc();},
+    rewind(target){
+      const frame=state.stack.findLastIndex(entry=>entry.cwScreen===target||entry.form===target);
+      if(frame>=0){state.stack.length=frame+1;back();}
+    },
+    editor(title,name,value,submit){
+      const linear=cwLineInput();
+      const options=linear?{type:'linear'}:{context:inputContext()};
+      form(title,[field(name,title,linear?displayCWLinearInput(value):value,options)],values=>submit(linear?prepareCWLinearInput(values[name]):values[name]),true,{kind:'cw-entry',name});
+    },
+    readNumber:cwNumber,format:formatted,renderValue:value=>valueHTML(value,false),renderTex:texRender,
+    store:(value,approximate=false)=>cwStoreValue(value,approximate),
+  };
+}
 function highlight(){rememberMenuSelection();if(model.family==='cw'&&state.view==='menu')updateCwHomePage($('#screen'),state.selected);if(['x','ex'].includes(model.family)&&state.view==='menu')updateClasswizMenu($('#screen'),modes,state.selected);const sel=state.view==='menu'?'.mode-tile':'.list-item';document.querySelectorAll(sel).forEach((el,i)=>el.classList.toggle('selected',i===state.selected));if(state.view==='list'){const host=$('#screen'),row=host.querySelector('.selected');if(row){const h=host.getBoundingClientRect(),r=row.getBoundingClientRect();if(r.top<h.top)host.scrollTop+=r.top-h.top;else if(r.bottom>h.bottom)host.scrollTop+=r.bottom-h.bottom;}}if(state.view==='menu'&&model.nativeMenu)$('#screen .mode-tile.selected')?.scrollIntoView({block:'nearest',inline:'nearest'});cgContextKeys();}
 function form(title,fields,submit,save=true,layout=null){
   if(save)push();closeGraph();state.view='form';state.form={title,fields,submit,layout};state.list=null;
-  $('#screen').innerHTML='<div class="screen-heading">'+esc(title)+'<span class="screen-hint">Enter 下一项 / 计算</span></div><form id="parameters"><div id="form-content"></div><button class="run-button" type="submit">= 计算</button><div id="form-error" role="alert"></div></form>';
+  $('#screen').innerHTML='<div class="screen-heading">'+esc(title)+'<span class="screen-hint">Enter 下一项 / 计算</span></div><form id="parameters"'+(layout?.kind==='cw-entry'?' class="cw-equation-entry"':'')+'><div id="form-content"></div><button class="run-button" type="submit">= 计算</button><div id="form-error" role="alert"></div></form>';
   const content=$('#form-content');
   if(layout)content.innerHTML=formulaLayout(layout,fields);
   fields.forEach((f,i)=>{
     let el;
     if(f.options){el=document.createElement('select');for(const [value,label]of f.options){const option=new Option(label,value);el.add(option);}el.value=f.value||f.options[0][0];el.dataset.name=f.name;}
-    else if(f.type==='area'){el=document.createElement('textarea');el.value=f.value||'';el.dataset.name=f.name;}
-    else el=createMathInput({label:f.label,value:f.latex??f.value??'',latex:f.latex!==undefined,onMove:direction=>{const controls=formControls(),index=controls.indexOf(el);if(['forward','backward','upward','downward'].includes(direction)){const next=controls[index+(direction==='backward'||direction==='upward'?-1:1)];if(next){next.focus();return true;}}return false;}});
+    else if(f.type==='area'||f.type==='linear'){el=document.createElement(f.type==='area'?'textarea':'input');el.value=f.value||'';el.dataset.name=f.name;}
+    else el=createMathInput({label:f.label,value:f.latex??f.value??'',latex:f.latex!==undefined,cwLCD:model.nativeCw,onMove:direction=>{const controls=formControls(),index=controls.indexOf(el);if(['forward','backward','upward','downward'].includes(direction)){const next=controls[index+(direction==='backward'||direction==='upward'?-1:1)];if(next){next.focus();return true;}}return false;}});
     el.id='param-'+i;el.dataset.name=f.name;el.setAttribute('aria-label',f.label);
     let host=layout?content.querySelector('[data-slot="'+f.name+'"]'):null;
     if(!host){host=document.createElement('div');host.className='form-row'+(f.type==='area'?' wide':'');const label=document.createElement('label');label.htmlFor=el.id;label.textContent=f.label;host.append(label);content.append(host);}
@@ -499,9 +909,75 @@ const exprItem=(label,text,caret=null)=>item(label,()=>{showCalc();insert(text,c
 function showSpreadsheet(){
   assert(model.spreadsheet,'此型号不支持数据表格应用');closeGraph();sheet??=calc.createSpreadsheet();
   state.view='spreadsheet';state.form=null;state.list=null;
-  sheetPanel=createSpreadsheetPanel({host:$('#screen'),sheet,onBack:()=>menu()});status();
+  const settings=state.cwSheetSettings;
+  if(settings)sheet.autoCalculate=settings.autoCalculate;
+  sheetPanel??=createSpreadsheetPanel({host:$('#screen'),sheet,onBack:()=>menu(),native:model.nativeCw,settings});
+  sheetPanel.mount();status();
+}
+function returnToDataView(view){
+  while(state.stack.length&&state.stack.at(-1).view!==view)state.stack.pop();
+  if(state.stack.at(-1)?.view===view)state.stack.pop();
+  if(view==='spreadsheet')showSpreadsheet();
+  else showCWDistribution();
+}
+function cwStoreValue(value,approximate,exact=null){openCWVariables(cwContext(),{value,approximate,exact},false);}
+function cwSheetOption(title,key,choices){
+  const settings=state.cwSheetSettings;
+  cwChoices(title,choices,settings[key],value=>{
+    settings[key]=value;
+    if(key==='autoCalculate')sheet.autoCalculate=value;
+  });
+}
+function cwSheetTools(){
+  const resume=()=>returnToDataView('spreadsheet');
+  cwDataList('工具',[
+    item('编辑单元格',()=>{resume();sheetPanel.edit();}),
+    cwSubmenu('公式填充',()=>sheetFill(true)),cwSubmenu('数值填充',()=>sheetFill(false)),
+    item('剪切 & 粘贴',()=>{resume();sheetPanel.beginPaste(true);}),
+    item('复制 & 粘贴',()=>{resume();sheetPanel.beginPaste(false);}),
+    item('全部删除',()=>{sheet.clear();resume();sheetPanel.resetSelection();}),
+    item('剩余字节',()=>result('剩余字节',[['bytes',sheetPanel.remaining()]])),
+    cwSubmenu('自动计算',()=>cwSheetOption('自动计算','autoCalculate',[['开',true],['关',false]])),
+    cwSubmenu('显示单元格',()=>cwSheetOption('显示单元格','showValue',[['公式',false],['数值',true]])),
+    item('重新计算',()=>{sheet.recalculate();resume();}),
+    cwSubmenu('桌面工作表',cwWorkbookTools),
+  ]);
+}
+function cwWorkbookTools(){
+  cwDataList('桌面工作表',[
+    cwSubmenu('容量模式',()=>cwChoices('容量模式',[['原机容量',false],['扩展容量',true]],sheet.extended,extended=>sheet.setExtended(extended))),
+    item('保存工作表文件',()=>downloadLocalData('fx-999CN-CW-worksheet.json',encodeCWWorkbook(sheet))),
+    item('从文件恢复',openCWWorkbookFile),
+  ]);
+}
+function openCWWorkbookFile(){
+  const workspace=sheet,originalState=state,originalMenu=state.list,cells=workspace.cells,extended=workspace.extended;
+  const unchanged=()=>state===originalState&&!state.off&&state.mode==='spreadsheet'&&sheet===workspace&&workspace.cells===cells&&workspace.extended===extended;
+  const stillChoosing=()=>unchanged()&&state.view==='list'&&state.list===originalMenu;
+  const input=document.createElement('input');
+  input.type='file';input.accept='.json,application/json';input.hidden=true;
+  input.setAttribute('aria-label','从文件恢复');
+  input.addEventListener('cancel',()=>input.remove(),{once:true});
+  input.addEventListener('change',async()=>{
+    const file=input.files[0];input.remove();
+    if(!file||!stillChoosing())return;
+    try{
+      assert(file.size<=CW_WORKBOOK_MAX_BYTES,'工作表文件过大');
+      const text=await file.text();
+      if(!stillChoosing())return;
+      const candidate=readCWWorkbook(calc,text);
+      const replace=()=>{
+        if(!unchanged())return;
+        sheet=candidate;sheetPanel=null;returnToDataView('spreadsheet');
+      };
+      if(Object.keys(cells).length)cwDataList('用文件替换当前工作表？',[item('取消',back),item('替换',replace)],0,true);
+      else replace();
+    }catch(error){if(stillChoosing())cwErrorScreen(error.message);}
+  },{once:true});
+  $('#app').append(input);input.click();
 }
 function sheetTools(){
+  if(model.nativeCw){cwSheetTools();return;}
   sheet??=calc.createSpreadsheet();
   list('工具',[
     item('编辑单元格',()=>{showSpreadsheet();sheetPanel.edit();}),
@@ -515,12 +991,25 @@ function sheetTools(){
   ]);
 }
 function sheetFill(formula){
+  if(model.nativeCw){returnToDataView('spreadsheet');sheetPanel.beginFill(formula);return;}
   form(formula?'公式填充':'数值填充',[field('expression',formula?'公式':'数值','',{type:'area'}),field('range','范围',sheet.selected+':'+sheet.selected,{type:'area'})],v=>{
     sheet.fill(v.range.trim().toUpperCase(),v.expression.trim(),formula);showSpreadsheet();
   });
 }
+function showCWDistribution(){
+  closeGraph();state.view='cw-distribution';state.form=null;state.list=null;
+  cwDistributionPanel??=createCWDistributionPanel({
+    host:$('#screen'),session:distributionSession,evaluate:cwNumber,
+    calculate:(id,parameters)=>calc.distribution(id,parameters),format:formatted,
+    onAnswer:value=>{setAnswer(value,true);persist();},
+    onStore:cwStoreValue,
+    onExit:()=>menu(),
+  });
+  cwDistributionPanel.mount();status();
+}
 function distributionMenu(){
   assert(model.distribution,'此型号不支持分布应用');
+  if(model.nativeCw){showCWDistribution();return;}
   const specs=model.distributionOrder?model.distributionOrder.map(id=>distributionTypes.find(spec=>spec.id===id)):distributionTypes;
   list('分布',specs.map(spec=>item(spec.label,()=>{
     if(spec.list)list(spec.label,[item('列表',()=>distributionForm(spec,true)),item('变量',()=>distributionForm(spec,false))]);
@@ -531,8 +1020,8 @@ function distributionForm(spec,useList){
   spec={...spec,parameters:model.distributionParameterOrder?.[spec.id]||spec.parameters};
   const defaults={x:0,N:1,p:.5,'μ':0,'σ':1,'λ':1,'下限':-1,'上限':1,'区域':.5};
   if(model.family==='ti')Object.assign(defaults,{'λ':0,'下限':-1e99,'上限':1e99});
-  const fields=spec.parameters.filter(k=>!useList||k!=='x').map(k=>field(k,k,String(distributionParameters[k]??defaults[k])));
-  if(useList===true)fields.unshift(field('values','x 数值列表',distributionRows.join('\n'),{type:'area'}));
+  const fields=spec.parameters.filter(k=>!useList||k!=='x').map(k=>field(k,k,String(distributionSession.parameters[k]??defaults[k])));
+  if(useList===true)fields.unshift(field('values','x 数值列表',distributionSession.rows.join('\n'),{type:'area'}));
   form(spec.label,fields,v=>{
     const parameters=Object.fromEntries(spec.parameters.filter(k=>!useList||k!=='x').map(k=>[k,number(v[k])]));
     if(useList){
@@ -540,10 +1029,10 @@ function distributionForm(spec,useList){
       if(useList==='all')assert(Number.isInteger(parameters.N)&&parameters.N>=0&&parameters.N<limit,'ALL 最多支持 42 项');
       const entries=useList==='all'?Array.from({length:parameters.N+1},(_,i)=>String(i)):v.values.trim().split(/[,，;；\s]+/).filter(Boolean);
       assert(entries.length>0&&entries.length<=limit,limit===42?'分布列表须有 1–42 项':'分布列表须有 1–45 项');
-      const xs=entries.map(number);calc.distribution(spec.id,{...parameters,x:0});distributionRows=xs;Object.assign(distributionParameters,parameters);
+      const xs=entries.map(number);calc.distribution(spec.id,{...parameters,x:0});distributionSession.rows=xs;Object.assign(distributionSession.parameters,parameters);
       result(spec.label,xs.map(x=>{try{return ['x = '+x,calc.distribution(spec.id,{...parameters,x}),true];}catch{return ['x = '+x,'错误'];}}),true);
     }else {
-      const value=calc.distribution(spec.id,parameters);Object.assign(distributionParameters,parameters);setAnswer(value,true);persist();result(spec.label,[[spec.id==='inverseNormal'?'x':'P',value]],true);
+      const value=calc.distribution(spec.id,parameters);Object.assign(distributionSession.parameters,parameters);setAnswer(value,true);persist();result(spec.label,[[spec.id==='inverseNormal'?'x':'P',value]],true);
     }
   });
 }
@@ -562,6 +1051,10 @@ function tiStats(tab='stat'){
 }
 
 function modeOptions(){
+  if(model.nativeCw&&['equation','inequality','ratio'].includes(state.mode)){openCWEquation(cwContext());return;}
+  if(model.nativeCw&&state.mode==='table'){openCWTable(cwContext());return;}
+  if(model.nativeCw&&state.mode==='stat'){openCWStatistics(cwContext());return;}
+  if(model.nativeCw&&['base','matrix','vector'].includes(state.mode)){showCalc();return;}
   if(model.family==='cg'&&['stat','eactivity','spreadsheet','dynamic','table','recursion','conic','program','financial','geometry','pictureplot','graph3d','system','memory','link','econ'].includes(state.mode)){showCGApplication(state.mode);return;}
   if(model.family==='cg'&&state.mode==='equation'){list('Equation',[item('Simultaneous (2–6)',()=>list('Unknowns',model.linearSizes.map(n=>item(String(n),()=>systemForm(n))))),item('Polynomial (2–6)',()=>degreeMenu(false)),item('Solver',solveForm)]);return;}
   switch(state.mode){
@@ -583,13 +1076,126 @@ function modeOptions(){
     default:functions();
   }
 }
+function cwCatalogInsertion(input=$('#entry')){
+  const id=input?.id, mathInput=isMathInput(input);
+  const selection=mathInput?structuredClone(input.selection):[input?.selectionStart,input?.selectionEnd];
+  return source=>{
+    closeCWMenu();
+    const restored=id?document.getElementById(id):null;
+    if(restored){
+      restored.focus({preventScroll:true});
+      if(mathInput)restored.selection=selection;
+      else if(selection[0]!=null)restored.setSelectionRange(...selection);
+    }
+    insert(source);
+  };
+}
+function cwLinearCatalog(onInsert,additional=[]){
+  cwDataList('目录',[...additional,...cwCatalogEntries(onInsert,{linearData:true})]);
+}
 function catalogMenu(){
+  if(model.nativeCw&&state.view==='calc'){
+    if(state.mode==='base'){cwBaseCatalog();return;}
+    const onInsert=cwCatalogInsertion(),entries=cwCatalogEntries(onInsert);
+    if(state.mode==='stat'&&state.cwStat)state.cwStat.catalog(onInsert,entries);
+    else if(['matrix','vector'].includes(state.mode))cwArrayCatalog(cwContext(),onInsert,entries);
+    else cwDataList('目录',entries);
+    return;
+  }
+  if(model.nativeCw&&state.form?.layout?.kind==='cw-entry'){
+    const solver=state.form.layout.name==='expr';
+    const onInsert=cwCatalogInsertion($('#param-0'));
+    const equation=cwSubmenu('方程',()=>cwDataList('方程',[item('=',()=>onInsert('='))]));
+    cwDataList('目录',[...(solver?[equation]:[]),...cwCatalogEntries(onInsert,{solver})]);
+    return;
+  }
+  if(model.nativeCw&&state.view==='spreadsheet'){
+    const insertSource=source=>{returnToDataView('spreadsheet');sheetPanel.insert(source);};
+    const insertCellText=(label,text)=>item(label,()=>insertSource(text));
+    cwLinearCatalog(insertSource,[cwSubmenu('数据表格',()=>cwDataList('数据表格',[
+      item('数据抓取',()=>{returnToDataView('spreadsheet');sheetPanel.beginGrab();}),
+      insertCellText('$','$'),insertCellText(':',':'),
+      ...[['最小值','Min('],['最大值','Max('],['平均值','Mean('],['求和','Sum(']].map(([label,text])=>insertCellText(label,text)),
+    ]))]);
+    return;
+  }
   if(state.mode==='spreadsheet'){list('数据表格',['Sum','Mean','Min','Max'].map(name=>item(name+'(',()=>{showSpreadsheet();sheetPanel.insert('='+name+'(');})));return;}
   // CW separates commands/functions from application tools.
   if(['matrix','vector','base'].includes(state.mode))modeOptions();else functions();
 }
+function cwBaseCatalog(){
+  const insertCommand=(label,source)=>item(label,()=>{closeCWMenu();insert(source);});
+  cwDataList('目录',[
+    cwSubmenu('十六进制数码',()=>cwDataList('十六进制数码',[...'ABCDEF'].map(letter=>insertCommand(letter,letter)))),
+    cwSubmenu('进制前缀',()=>cwDataList('进制前缀',Object.entries(CW_BASE_PREFIXES).map(([prefix,base])=>insertCommand(`${CW_BASE_LABELS[base]}(${prefix})`,prefix)))),
+    cwSubmenu('位运算',()=>cwDataList('位运算',['Neg','Not','and','or','xor','xnor'].map(op=>{
+      const prefix=op==='Neg'||op==='Not';
+      return insertCommand(op,prefix?`${op}(`:` ${op.toUpperCase()} `);
+    }))),
+  ]);
+}
+function cwCatalogEntries(onInsert,{linearData=false,solver=false}={}){
+  const expression=(label,source)=>item(label,()=>onInsert(linearData?cwDataKeyText(source)??source:source));
+  const category=(label,entries)=>cwSubmenu(label,()=>cwDataList(label,entries));
+  const calculation=state.view==='calc'&&!linearData;
+  const coordinate=calculation&&['calc','stat','matrix','vector'].includes(state.mode);
+  const linear=linearData||cwLineInput();
+  const symbol=command=>expression(command.label,linearData?command.text:command.name);
+  return [
+    ...(calculation&&state.cwVerify?[category('运算验证',cwRelations.map(op=>expression(op,op)))]:[]),
+    category('函数与分析',[
+      expression('导数(d/dx)','derivative'),expression('积分(∫)','integral'),
+      ...(!solver?[expression('求和(Σ)','sigma')]:[]),
+      ...(coordinate?[expression('求余数','CWRemainder')]:[]),
+      ...(calculation&&state.cwManualSimplify&&state.mode==='calc'?[item('化简',()=>{
+        closeCWMenu();
+        if(state.hasAnswer){state.expr='Ans Simp ';state.latex='\\mathrm{Ans}\\CGSimp ';state.hasAnswer=false;showCalc();}
+        else if(isMathInput($('#entry')))insertIntoMath($('#entry'),'\\CGSimp ');
+        else insert(' Simp ');
+      })]:[]),
+      ...(!linear?[expression('对数(logab)','log(')]:[]),expression('对数(log)','cw-log'),expression('自然对数(ln)','ln('),
+    ]),
+    category('概率',[
+      ...(state.mode!=='complex'?[expression('%','%')]:[]),expression('阶乘(!)','!'),
+      expression('排列','perm'),expression('组合','comb'),
+      ...(!solver?[expression('随机数','Ran()'),expression('随机整数','RanInt(')]:[]),
+    ]),
+    category('数值计算',[expression('绝对值','abs('),expression('四舍五入','Rnd(')]),
+    category('角度 / 坐标转换 / 六十进制',[
+      ...CW_ANGLES.map(symbol),
+      ...(coordinate&&!state.cwVerify?[expression('直角坐标转极坐标','Pol('),expression('极坐标转直角坐标','Rec(')]:[]),
+      expression('度分秒','dms'),
+    ]),
+    category('双曲线 / 三角函数',['sinh','cosh','tanh','asinh','acosh','atanh','sin','cos','tan','asin','acos','atan'].map(name=>expression(name,name+'('))),
+    category('工程符号',CW_ENGINEERING.map(symbol)),
+    cwSubmenu('科学常数',()=>cwConstantCatalog(onInsert)),cwSubmenu('单位转换',()=>cwUnitCatalog(onInsert,linearData)),
+    ...(calculation&&['calc','complex'].includes(state.mode)?[category('多语句/赋值',[expression(':',':'),...model.variables.map(name=>expression('→'+name,'→'+name))])]:[]),
+    ...(calculation&&state.mode==='complex'?[category('复数',[
+      expression('i','i'),expression('∠','polar-angle'),expression('共轭复数','conj('),expression('辐角','arg('),expression('实部','re('),expression('虚部','im('),
+    ])]:[]),
+    category('其他',[
+      expression('Ans','Ans'),expression('π','pi'),expression('e','e'),
+      expression('√(','sqrt('),expression('x√(','root'),expression('⁻¹','^(-1)'),
+      expression('²','^2'),expression('^(','^'),expression('−','-'),expression(',',','),expression('(','('),expression(')',')'),
+    ]),
+  ];
+}
 function toolsMenu(){
+  if(state.mode==='stat'&&state.view==='calc'&&state.cwStat){state.cwStat.tools();return;}
+  if(model.nativeCw&&state.view==='calc'&&['matrix','vector'].includes(state.mode)){cwArrayVariables(cwContext());return;}
   if(state.mode==='spreadsheet'){sheetTools();return;}
+  if(state.cwSettings&&state.view==='calc'&&['calc','complex'].includes(state.mode)){
+    cwDataList('工具',[
+      item('撤消',()=>{closeCWMenu();dispatch('undo');}),
+      ...(state.mode==='calc'?[cwSubmenu('化简',()=>cwChoices('化简',[['自动',false],['手动',true]],!!state.cwManualSimplify,value=>{state.cwManualSimplify=value;state.cwRational=null;}))]:[]),
+      item(state.cwVerify?'运算验证关闭':'运算验证开启',()=>{
+        state.cwVerify=!state.cwVerify;state.cwVerifyRhs='';clearCWHistory();
+        state.expr='';state.latex='';state.hasAnswer=false;state.error='';
+        persist();closeCWMenu();
+      }),
+    ]);
+    return;
+  }
   if(['calc','complex'].includes(state.mode))list('工具',[
     item('计算历史',historyMenu),item('变量',variableMenu),
     item('代入计算',calcForm),...(model.solveLocation==='equation'?[]:[item('求解方程',solveForm)]),
@@ -598,14 +1204,24 @@ function toolsMenu(){
 function definitionsMenu(){
   assert(model.registeredFunctions,'此型号不支持注册函数');
   const names=calc.functionNames();
+  if(model.nativeCw&&state.view==='spreadsheet'){
+    cwDataList('功能',[
+      ...names.map(name=>cwSubmenu('定义 '+name+'(x)',()=>definitionForm(name))),
+      ...names.map(name=>item(name+'(',()=>{returnToDataView('spreadsheet');sheetPanel.insert(name+'('); })),
+    ]);
+    return;
+  }
   list('函数',[...names.map(name=>item('定义 '+name+'(x)',()=>definitionForm(name))),...names.map(name=>exprItem(name+'(x)',name+'('))]);
 }
 function definitionForm(name){
   form('定义 '+name+'(x)',[field('expression',name+'(x)',calc.definitions[name]||'')],v=>{
-    calc.define(name,v.expression);state.stack=[];showCalc();
+    calc.define(name,v.expression);
+    if(model.nativeCw&&state.mode==='spreadsheet'){returnToDataView('spreadsheet');return;}
+    state.stack=[];showCalc();
   });
 }
 function formatMenu(){
+  if(state.cwSettings){cwFormatMenu();return;}
   if(!state.hasAnswer)return;
   const numeric=typeof state.answer==='number';
   list('转换',[
@@ -615,6 +1231,29 @@ function formatMenu(){
       ...(Number.isSafeInteger(state.answer)&&state.answer>0&&state.answer<=1e12?[item('素因子分解',factor)]:[]),
       item('带分数',()=>dispatch('mixed')),item('工程记数法',()=>{state.stack=[];showCalc();dispatch('eng');}),item('六十进制',showDms),
     ]:[]),
+  ]);
+}
+function cwFormatMenu(){
+  if(state.view==='calc'&&state.mode==='base'){
+    state.base=CW_BASES[(CW_BASES.indexOf(state.base)+1)%CW_BASES.length];showCalc();return;
+  }
+  if(!state.hasAnswer||state.view!=='calc')return;
+  const value=state.answer;
+  if(typeof value!=='number'&&!math.isComplex(value))return;
+  const convert=(label,format)=>item(label,()=>{
+    state.cwConversion=format;
+    state.cwEngEditing=format==='engineering';
+    state.eng=state.cwEngEditing?cwEngineeringExponent(value,state.cwExactAnswer):null;
+    back();
+  });
+  const numeric=typeof value==='number';
+  const fraction=numeric&&!state.approximateAnswer&&/^-?\\frac\{\d+\}\{\d+\}$/.test(exactTex(value));
+  cwDataList('格式',[
+    convert('标准','standard'),convert('小数','decimal'),
+    ...(numeric&&Number.isSafeInteger(value)&&value>=2&&value<1e10?[convert('质因数分解','factor')]:[]),
+    ...(!numeric?[convert('代数形式(a+bi)','rect'),convert('极坐标形式(r∠θ)','polar')]:[]),
+    ...(fraction?[convert('假分数','improper'),convert('带分数','mixed')]:[]),
+    ...(numeric?[convert('工程记数法','engineering'),convert('六十进制','dms')]:[]),
   ]);
 }
 function degreeMenu(ineq){list(ineq?'不等式次数':'多项式次数',(model.polynomialDegrees||[2,3,4]).map(n=>item(`${n} 次`,()=>polynomialForm(n,ineq))));}
@@ -638,6 +1277,7 @@ function askTableForm(){form('Ask-x',[field('f','f(x)',calc.definitions.f||''),f
 function solveForm(){
   if(model.solveLocation==='calc')return xSolve();
   if(model.solveLocation==='equation'&&state.mode!=='equation')activateMode('equation');
+  if(model.nativeCw){openCWSolver(cwContext());return;}
   form('求解方程',[field('expr','方程'),field('guess','x 初始值')],v=>{const x=calc.solve(v.expr,number(v.guess),extraScope());calc.assign('x',x,true);result('求解结果',[['x',x],['L−R',calc.evaluate(v.expr.includes('=')?v.expr.split('=').map(s=>`(${s})`).join('-'):v.expr,{...extraScope(),x})]],true);},true,'solve');
 }
 function xSolve(){
@@ -728,30 +1368,185 @@ function binaryForm(fn){
 }
 function scalarForm(title,fn){form(title,[field('a','x')],v=>{const value=calc.evaluate(fn+'('+v.a+')',extraScope(),state.mode==='complex');setAnswer(value,calc.lastEvaluationApproximate);result(title,[['结果',value]]);},true,{kind:'unary'});}
 function dmsForm(){form('度分秒输入',[field('d','度'),field('m','分'),field('s','秒')],v=>{const d=number(v.d),m=number(v.m),sec=number(v.s);assert(m>=0&&m<60&&sec>=0&&sec<60,'分、秒须在 0–60 之间');const value=calc.evaluate('dms('+d+','+m+','+sec+')');setAnswer(value,calc.lastEvaluationApproximate);result('度分秒',[['角度',d+'° '+m+'′ '+sec+'″'],['结果',value]]);},true,'dms');}
-function showDms(){const x=state.hasAnswer?state.answer:number(state.expr);assert(typeof x==='number');const a=Math.abs(x),d=Math.floor(a),m=Math.floor((a-d)*60),s=Number(((a-d-m/60)*3600).toFixed(6));result('度分秒',[['结果',`${x<0?'−':''}${d}° ${m}′ ${s}″`]]);}
-function factor(){const v=state.hasAnswer?state.answer:number(state.expr);const tex=factorize(v).map(([p,k])=>k===1?String(p):`${p}^{${k}}`).join(String.raw`\times`)||'1';result('素因子分解',[[String(v),{tex}]]);}
-function variableMenu(){list('变量 / 存储器',[item('STO · 存储结果',storeMenu),item('RCL · 调用变量',()=>recallMenu()),item('变量列表',()=>result('变量',Object.entries(calc.vars).map(([k,v])=>[k,v,calc.approximateVariables.has(k)])))]);}
+function dmsText(x){assert(typeof x==='number');const a=Math.abs(x),d=Math.floor(a),m=Math.floor((a-d)*60),s=Number(((a-d-m/60)*3600).toFixed(6));return `${x<0?'−':''}${d}° ${m}′ ${s}″`;}
+function showDms(){const x=state.hasAnswer?state.answer:number(state.expr);result('度分秒',[['结果',dmsText(x)]]);}
+function primeFactorsTex(value){return factorize(value).map(([p,k])=>k===1?String(p):`${p}^{${k}}`).join(String.raw`\times`)||'1';}
+function factor(){const v=state.hasAnswer?state.answer:number(state.expr);result('素因子分解',[[String(v),{tex:primeFactorsTex(v)}]]);}
+function variableMenu(){
+  if(model.nativeCw){
+    const value=state.hasAnswer&&state.view==='calc'?state.answer:null;
+    const assignment=typeof value==='number'||math.isComplex(value)?{value,approximate:state.approximateAnswer,exact:state.cwExactAnswer}:null;
+    openCWVariables(cwContext(),assignment);
+    return;
+  }
+  list('变量 / 存储器',[item('STO · 存储结果',storeMenu),item('RCL · 调用变量',()=>recallMenu()),item('变量列表',()=>result('变量',Object.entries(calc.vars).map(([k,v])=>[k,v,calc.approximateVariables.has(k)])))]);
+}
 function storeMenu(){const v=state.hasAnswer?state.answer:number(state.expr),exact=model.family==='cg'?(state.hasAnswer?calc.exactAnswer:calc.lastExactResult):null;list('STO → 变量',model.variables.map(k=>item(`${k} = ${decimal(calc.vars[k])}`,()=>{calc.assign(k,v,state.hasAnswer?state.approximateAnswer:calc.lastEvaluationApproximate,exact);persist();showCalc();status();})));}
 function recallMenu(){list('RCL · 变量',[...model.variables,'Ans'].map(k=>exprItem(`${k} = ${decimal(calc.vars[k])}`,k)));}
 function constantMenu(){
+  if(model.nativeCw){cwConstantCatalog(cwCatalogInsertion());return;}
   const entries=constantsFor(model);
   const choices=rows=>rows.map(([symbol,name,value,unit])=>item(`${symbol} · ${name} ${unit}`,()=>{showCalc();insert(`(${value})`);}));
   if(model.family==='cw')list('科学常数',cwConstantGroups.map(([name,symbols])=>item(name,()=>list(name,choices(symbols.map(symbol=>entries.find(row=>row[0]===symbol)))))));
   else list('科学常数',choices(entries));
 }
-function conversionMenu(){list('公制换算',conversions.map(c=>item(c.label,()=>form(c.label,[field('value',c.from)],v=>{const x=c.convert(number(v.value));assert(Number.isFinite(x));setAnswer(x,calc.lastEvaluationApproximate);result(c.label,[[c.to,x]],calc.lastEvaluationApproximate);} ))));}
+function cwConstantCatalog(onInsert){
+  const constants=new Map(constantsFor(model).map(row=>[row[0],row]));
+  cwDataList('科学常数',cwConstantGroups.map(([label,symbols])=>cwSubmenu(label,()=>cwDataList(label,symbols.map(symbol=>{
+    const [,name,value,unit]=constants.get(symbol);
+    return item(symbol+' · '+name+' '+unit,()=>onInsert('('+value+')'));
+  })))));
+}
+function cwUnitCatalog(onInsert,linearData=false){
+  cwDataList('单位换算',CW_UNIT_GROUPS.map(({label,commands})=>cwSubmenu(label,()=>cwDataList(label,
+    commands.map(command=>item(command.label,()=>onInsert(linearData?command.label:command.name))),
+  ))));
+}
+function conversionMenu(){
+  if(model.nativeCw){cwUnitCatalog(cwCatalogInsertion());return;}
+  list('公制换算',conversions.map(c=>item(c.label,()=>form(c.label,[field('value',c.from)],v=>{const x=c.convert(number(v.value));assert(Number.isFinite(x));setAnswer(x,calc.lastEvaluationApproximate);result(c.label,[[c.to,x]],calc.lastEvaluationApproximate);} ))));
+}
 function historyMenu(){list('计算历史',state.history.slice().reverse().map(h=>item(`${h.expr} = ${h.answer}`,()=>{state.mode=h.mode;setExpr(h.expr);})));}
-function setup(){if(model.family==='cg'&&graphPanel?.setup){graphPanel.setup();return;}if(model.family==='cg'&&appPanel?.setup){appPanel.setup();return;}if(model.family==='cg'&&appPanel?.handleAction?.('setup'))return;if(model.family==='cg'){showCGSetup();return;}list('设置',[item('角度单位',()=>list('角度单位',['Deg','Rad','Gra'].map((a,i)=>item(['度（D）','弧度（R）','梯度（G）'][i],()=>{calc.angle=a;persist();status();if(state.mode==='graph'&&model.graphing)showGraph();else showCalc();})))),item('输入/输出',()=>list('输出格式',[item('数学结果（分数 / 根式）',()=>{state.decimal=false;persist();showCalc();}),item('小数结果',()=>{state.decimal=true;persist();showCalc();})])),item('显示格式',()=>list('显示格式',[item('Norm',()=>{state.format='Norm';persist();showCalc();}),...['Fix','Sci'].map(f=>item(f,()=>form(f,[field('n',f==='Fix'?'小数位 0–9':'有效位 1–10')],v=>{const n=Number(v.n);assert(Number.isInteger(n)&&n>=(f==='Fix'?0:1)&&n<=(f==='Fix'?9:10),'位数超出范围');state.format=f;state.digits=n;persist();showCalc();})))])),item('语言 / Language',languageMenu),item('展开 / 收起屏幕',toggleExpand),item('切换型号',showModelPicker),item('复位',resetMenu)]);}
-function resetMenu(){list('复位',[item('清除变量',()=>{for(const k in calc.vars)calc.assign(k,0);persist();state.hasAnswer=false;showCalc();}),item('恢复设置',()=>{calc.angle='Deg';state.decimal=false;state.format='Norm';persist();showCalc();}),item('全部初始化',()=>list('全部初始化？',[item('是 · 清除本软件数据',resetCurrentProfile),item('取消',back)]))]);}
+function cwDisplaySetup(){
+  const digits=mode=>Array.from({length:10},(_,i)=>[String(i),mode==='Sci'&&i===0?10:i]);
+  const set=(format,digits)=>{state.format=format;state.digits=digits;calc.cwRounding={format,digits};};
+  cwDataList('显示格式',[
+    ...['Fix','Sci'].map(mode=>cwSubmenu(mode,()=>cwChoices(mode,digits(mode),state.format===mode?state.digits:null,count=>set(mode,count)))),
+    cwSubmenu('Norm',()=>cwChoices('Norm',[['Norm 1',1],['Norm 2',2]],state.cwSettings.norm,norm=>{set('Norm',10);state.cwSettings.norm=norm;})),
+  ],['Fix','Sci','Norm'].indexOf(state.format));
+}
+function cwContrast(){
+  push();closeGraph();state.view='cw-contrast';state.list=null;state.form=null;
+  $('#screen').innerHTML='<div class="cw-contrast" aria-label="对比度"><div class="cw-contrast-scale" aria-hidden="true"></div><div class="cw-contrast-ends"><button type="button" data-action="left"><span>浅</span><span class="cw-contrast-arrow" aria-hidden="true">[◀]</span></button><button type="button" data-action="right"><span>深</span><span class="cw-contrast-arrow" aria-hidden="true">[▶]</span></button></div></div>';
+}
+function cwSetup(){
+  if(state.view==='menu'){result('计算器 ID',[['型号',model.name]]);return;}
+  const settings=state.cwSettings;
+  const option=(title,key,choices)=>cwSubmenu(title,()=>cwChoices(title,choices,settings[key],value=>{settings[key]=value;}));
+  const onOff=[['开',true],['关',false]];
+  cwDataList('设置',[
+    cwSubmenu('计算设置',()=>cwDataList('计算设置',[
+      cwSubmenu('输入/输出',()=>cwChoices('输入/输出',[
+        ['数学输入/数学输出','math'],['数学输入/小数输出','math-decimal'],['线性输入/线性输出','line'],['线性输入/小数输出','line-decimal'],
+      ],settings.inputOutput,value=>{
+        if(settings.inputOutput!==value){
+          clearCWHistory();
+          state.overwrite=false;
+          if(state.cwTable){state.cwTable.rows=[];calc.definitions={};}
+        }
+        if(cwLineInput()!==value.startsWith('line'))calc.definitions={};
+        settings.inputOutput=value;state.decimal=cwDecimalOutput();
+        state.cwConversion=null;
+      })),
+      cwSubmenu('角度单位',()=>cwChoices('角度单位',[['度（D）','Deg'],['弧度（R）','Rad'],['梯度（G）','Gra']],calc.angle,value=>{calc.angle=value;})),
+      cwSubmenu('显示格式',cwDisplaySetup),option('工程符号','engineering',onOff),
+      option('分数结果','mixedFractions',[['带分数',true],['假分数',false]]),
+      option('复数结果','polar',[['a+bi',false],['r∠θ',true]]),
+      option('小数点显示','decimalComma',[['句点',false],['逗号',true]]),option('数字分隔符','digitSeparator',onOff),
+    ])),
+    cwSubmenu('系统设置',()=>cwDataList('系统设置',[
+      cwSubmenu('对比度',cwContrast),cwSubmenu('语言 / Language',()=>cwChoices('语言 / Language',[['English','en'],['中文','zh']],state.language,setLanguage)),
+      option('多行字体','smallFont',[['普通字体',false],['小字体',true]]),
+    ])),
+    cwSubmenu('复位',cwResetMenu),
+  ]);
+}
+function cwResetMenu(){
+  const confirm=(label,run)=>cwSubmenu(label,()=>cwDataList(label,[item('是',run),item('否',back)],1));
+  function reset(keepVariables){
+    const {vars,approximateVariables,cwDecimals}=calc.save();
+    const profile={cwSettings:{contrast:state.cwSettings.contrast}};
+    if(keepVariables)profile.calculator={vars,approximateVariables,cwDecimals};
+    clearCWData();
+    state=createSession(profile,state.language,model.id);
+    calc=new ModelCalculator(model.id,state.calculator,state);
+    persist();status();menu(false);
+  }
+  cwDataList('复位',[
+    confirm('设置 & 数据',()=>reset(true)),
+    confirm('变量存储器',()=>{
+      for(const key of Object.keys(calc.vars))calc.assign(key,0);
+      state.hasAnswer=false;persist();back();
+    }),
+    confirm('全部初始化',()=>reset(false)),
+  ]);
+}
+function setup(){if(state.cwSettings){cwSetup();return;}if(model.family==='cg'&&graphPanel?.setup){graphPanel.setup();return;}if(model.family==='cg'&&appPanel?.setup){appPanel.setup();return;}if(model.family==='cg'&&appPanel?.handleAction?.('setup'))return;if(model.family==='cg'){showCGSetup();return;}list('设置',[item('角度单位',()=>list('角度单位',['Deg','Rad','Gra'].map((a,i)=>item(['度（D）','弧度（R）','梯度（G）'][i],()=>{calc.angle=a;persist();status();if(state.mode==='graph'&&model.graphing)showGraph();else showCalc();})))),item('输入/输出',()=>list('输出格式',[item('数学结果（分数 / 根式）',()=>{state.decimal=false;persist();showCalc();}),item('小数结果',()=>{state.decimal=true;persist();showCalc();})])),item('显示格式',()=>list('显示格式',[item('Norm',()=>{state.format='Norm';persist();showCalc();}),...['Fix','Sci'].map(f=>item(f,()=>form(f,[field('n',f==='Fix'?'小数位 0–9':'有效位 1–10')],v=>{const n=Number(v.n);assert(Number.isInteger(n)&&n>=(f==='Fix'?0:1)&&n<=(f==='Fix'?9:10),'位数超出范围');state.format=f;state.digits=n;persist();showCalc();})))])),item('语言 / Language',languageMenu),item('展开 / 收起屏幕',toggleExpand),item('切换型号',showModelPicker),item('复位',resetMenu)]);}
+function resetMenu(){if(state.cwSettings){cwResetMenu();return;}list('复位',[item('清除变量',()=>{for(const k in calc.vars)calc.assign(k,0);persist();state.hasAnswer=false;showCalc();}),item('恢复设置',()=>{calc.angle='Deg';state.decimal=false;state.format='Norm';persist();showCalc();}),item('全部初始化',()=>list('全部初始化？',[item('是 · 清除本软件数据',resetCurrentProfile),item('取消',back)]))]);}
 function toggleExpand(){document.body.classList.toggle('expanded');fitModel();}
+function startCWReplay(caret=null,focus=true){
+  if(!model.nativeCw||state.view!=='calc'||!state.hasAnswer)return false;
+  state.hasAnswer=false;state.cwReplay=false;state.cwConversion=null;state.eng=null;
+  renderAnswer();
+  if(focus)focusEntry(caret);
+  return true;
+}
+function cwTemplateAction(action){
+  return model.nativeCw&&state.shift&&state.view==='calc'&&isMathInput($('#entry'))&&['left','right'].includes(action)
+    ? 'cw-template-'+action : null;
+}
 function navigate(action){
+ const horizontal=action==='left'||action==='right';
+ if(model.nativeCw&&state.view==='calc'&&horizontal&&state.cwReplayAfterClear){
+   Object.assign(state,state.cwReplayAfterClear);
+   state.cwReplayAfterClear=null;
+   if(action==='right')state.cwReturnCaret=0;
+   showCalc();
+   return;
+ }
+ if(model.nativeCw&&state.view==='calc'&&state.hasAnswer&&['calc','complex','base'].includes(state.mode)){
+   if(action==='up'||action==='down'){historyStep(action==='up'?-1:1);return;}
+   if(horizontal&&scrollCWAnswer(action))return;
+   startCWReplay(action==='right'?0:null);
+   return;
+ }
+ if(state.view==='list'&&state.list.native){
+   if(action==='left'){back();return;}
+   if(action==='right'){if(state.list.items[state.selected]?.submenu)execute();return;}
+   const step=action==='up'?-1:1;
+   state.selected=Math.max(0,Math.min(state.list.items.length-1,state.selected+step));highlight();return;
+ }
  if(state.view==='menu'||state.view==='list'){const len=state.view==='menu'?menuModes().length:state.list.items.length;if(!len)return;const columns=model.nativeMenu||['x','ex'].includes(model.family)?4:3;const step=state.view==='menu'?(action==='up'?-columns:action==='down'?columns:action==='left'?-1:1):(action==='up'||action==='left'?-1:1);state.selected=(state.selected+step+len)%len;highlight();return;}
  if(state.view==='result'){$('#screen').scrollBy({top:action==='up'?-35:action==='down'?35:0,left:action==='left'?-50:action==='right'?50:0});return;}
  const el=document.activeElement;
- if(isMathInput(el)){el.executeCommand({up:'moveUp',down:'moveDown',left:'moveLeft',right:'moveRight'}[action]);return;}
+ if(isMathInput(el)){
+   if(model.nativeCw){
+     state.cwArgument=null;
+     if(horizontal)moveCWEntryHorizontally(el,action);
+     else el.executeCommand(action==='up'?'moveUp':'moveDown');
+   }else el.executeCommand({up:'moveUp',down:'moveDown',left:'moveLeft',right:'moveRight'}[action]);
+   return;
+ }
  if(state.view==='form'){const els=formControls(),i=els.indexOf(el);if(action==='up'||action==='down')els[Math.max(0,Math.min(els.length-1,i+(action==='up'?-1:1)))]?.focus();return;}
  if(action==='up'||action==='down'){state.historyIndex=Math.max(0,Math.min(state.history.length-1,(state.historyIndex<0?state.history.length:state.historyIndex)+(action==='up'?-1:1)));const h=state.history[state.historyIndex];if(h){state.expr=h.expr;state.hasAnswer=false;state.error='';showCalc();}}
  else if(el?.id==='entry'){const pos=Math.max(0,Math.min(el.value.length,el.selectionStart+(action==='left'?-1:1)));el.setSelectionRange(pos,pos);}
+}
+function closeCWMenu(){
+  const origin=state.stack.findLastIndex(frame=>frame.view!=='list'||!frame.list.native);
+  if(origin>=0)state.stack.length=origin+1;
+  back();
+}
+function handleCWEngineering(action){
+  if(!cwEngineeringActive())return false;
+  if(action==='left'||action==='right'){
+    state.eng=Math.max(-99,Math.min(99,state.eng+(action==='left'?3:-3)));
+    renderAnswer();
+    return true;
+  }
+  if(action==='execute'||action==='back'){
+    state.cwEngEditing=false;
+    renderAnswer();
+    focusEntry();
+    return true;
+  }
+  if(['clear','menu','on','off','models'].includes(action)){
+    state.cwEngEditing=false;
+    state.eng=null;
+    state.cwConversion=null;
+    renderAnswer();
+    return false;
+  }
+  return true;
 }
 function dispatch(action){
   try{
@@ -765,6 +1560,15 @@ function dispatch(action){
   if(model.family==='cg'&&state.mode==='base'&&['options','variables'].includes(action))return;
   if(model.family==='cg'&&state.cgExam?.active&&(action==='on'||state.off&&action==='cg-clear-on')){const powered=powerOnCGExam({...state,calculator:calc.save()});if(!powered.cgExam?.active){importCGProfile(powered);return;}}
   if(state.off&&!['on','cg-clear-on'].includes(action))return;
+  if(handleCWEngineering(action))return;
+  if(state.view==='cw-contrast'){
+    if(action==='left'||action==='right'){
+      state.cwSettings.contrast=Math.max(0,Math.min(10,state.cwSettings.contrast+(action==='left'?-1:1)));
+      status();persist();return;
+    }
+    if(action==='clear'){closeCWMenu();return;}
+    if(action==='execute'||action==='back'){back();return;}
+  }
   if(state.mode==='base'&&state.view==='calc'&&Object.hasOwn(model.baseKeys||{},action)){state.base=model.baseKeys[action];showCalc();persist();return;}
   if(state.view==='menu'&&/^\d$/.test(action)){chooseMode(action==='0'?9:Number(action)-1);return;}
   if(state.view==='list'&&/^[1-9]$/.test(action)){const index=Number(action)-1;if(index<state.list.items.length){state.selected=index;execute();}return;}
@@ -777,8 +1581,37 @@ function dispatch(action){
   if(action==='ex-qr'){showQR();return;}
   if(model.family==='cg'&&handleCGAction(action))return;
   if($('#ti-stat-tabs')&&['left','right'].includes(action)){tiStats(action==='right'?'distr':'stat');return;}
+  if(state.view==='cw-distribution'&&!['shift','on','off','menu','models','language','setup','help','reset'].includes(action)){
+    if(action==='catalog'){
+      const insertSource=cwDistributionPanel.captureInsertion();
+      if(insertSource)cwLinearCatalog(source=>{returnToDataView('cw-distribution');insertSource(source);});
+    }else if(action==='tools'&&cwDistributionPanel.canEditRows()){
+      const editRows=operation=>{returnToDataView('cw-distribution');cwDistributionPanel.editRows(operation);};
+      cwDataList('工具',[cwSubmenu('编辑',()=>cwDataList('编辑',[item('插入行',()=>editRows('insert')),item('全部删除',()=>editRows('clear'))]))]);
+    }else cwDistributionPanel.handleAction(action);
+    return;
+  }
+  if(state.view==='cw-screen'&&!['shift','on','off','menu','models','language','setup','help','reset'].includes(action)){
+    const insertSource=action==='catalog'?state.cwScreen.captureInsertion?.():null;
+    if(insertSource)cwLinearCatalog(source=>{closeCWMenu();insertSource(source);});
+    else state.cwScreen.handleAction(action);
+    return;
+  }
+  if(action==='back'&&state.mode==='stat'&&state.view==='calc'&&state.cwStat){state.cwStat.back();return;}
   if(sheetPanel&&state.view==='spreadsheet'&&sheetPanel.handleAction(action))return;
-  if(sheetPanel&&state.view==='spreadsheet'&&!['shift','on','off','menu','models','language','tools','catalog','options','setup','help','page-up','page-down'].includes(action)){unavailable(action);return;}
+  if(sheetPanel&&state.view==='spreadsheet'){
+    if(model.nativeCw){
+      if(action==='variables'){
+        const cell=sheet.values[sheet.selected];
+        if(cell&&!cell.error&&!sheetPanel.isEditing())cwStoreValue(cell.value,false,cell.exact===undefined?null:{kind:'cw-decimal',decimal:cell.exact});
+        return;
+      }
+      if((action==='tools'||action==='options')&&sheetPanel.isEditing())return;
+    }
+    const allowed=['shift','on','off','menu','models','language','tools','catalog','options','setup','help','page-up','page-down'];
+    if(model.nativeCw)allowed.push('definitions','reset');
+    if(!allowed.includes(action)){unavailable(action);return;}
+  }
   if(action.startsWith('unimplemented:')){unavailable(action.slice(14));return;}
   if(action.startsWith('ti-multi:')){tiMultiTap.tap(action.slice(9));return;}
   if(action.startsWith('mode:')){activateMode(action.slice(5));return;}
@@ -802,33 +1635,109 @@ function dispatch(action){
     case 'ti-clearvar':list('clear var',model.variables.map(k=>item(k,()=>{calc.assign(k,0);persist();showCalc();})));break;
     case 'ti-fraction-decimal':dispatch('sd');break;
     case 'cg-clear-on':state.off=false;if(graphPanel)graphPanel.edit();else dispatch('clear');status();break;
-    case 'language':languageMenu();break;case 'models':showModelPicker();break;case 'back':back();break;case 'menu':menu();break;case 'setup':setup();break;case 'help':$('#help').showModal();break;case 'options':if(state.mode==='spreadsheet'&&model.spreadsheet)sheetTools();else modeOptions();break;
-    case 'cw-log':insert('log10(');break;
+    case 'language':languageMenu();break;case 'models':showModelPicker();break;case 'back':if(!startCWReplay())back();break;
+    case 'menu':if(state.cwSettings){clearCWHistory();persist();}menu();break;
+    case 'setup':setup();break;case 'help':$('#help').showModal();break;case 'options':if(state.mode==='spreadsheet'&&model.spreadsheet)sheetTools();else modeOptions();break;
+    case 'cw-log':insert(model.nativeCw?'cw-log':'log10(');break;
     case 'polar-angle':insert('polar-angle');break;
-    case 'page-up':case 'page-down':{const direction=action==='page-up'?-1:1;if(state.view==='menu'&&model.family==='cw'){state.selected=Math.max(0,Math.min(modes.length-1,state.selected+6*direction));highlight();}else $('#screen').scrollBy({top:direction*$('#screen').clientHeight});break;}
+    case 'page-up':case 'page-down':{
+      const direction=action==='page-up'?-1:1;
+      if(state.view==='menu'&&model.family==='cw'){
+        state.selected=Math.max(0,Math.min(modes.length-1,state.selected+6*direction));highlight();
+      }else if(state.view==='list'&&state.list.native){
+        state.selected=Math.max(0,Math.min(state.list.items.length-1,state.selected+4*direction));highlight();
+      }else if(model.nativeCw&&state.view==='calc'&&$('#entry')){
+        const input=$('#entry'),answer=$('#answer');
+        if(state.hasAnswer&&answer.scrollWidth>answer.clientWidth)answer.scrollLeft=direction<0?0:answer.scrollWidth;
+        else if(isMathInput(input))input.position=direction<0?0:input.lastOffset;
+        else {const position=direction<0?0:input.value.length;input.setSelectionRange(position,position);}
+      }else $('#screen').scrollBy({top:direction*$('#screen').clientHeight});
+      break;
+    }
     case 'catalog':catalogMenu();break;case 'tools':toolsMenu();break;case 'format':formatMenu();break;case 'definitions':definitionsMenu();break;case 'variables':variableMenu();break;
-    case 'clear':if(state.view!=='calc'){state.stack=[];showCalc();}else setExpr('');break;
-    case 'delete':{const el=document.activeElement;if(isMathInput(el)){el.executeCommand('deleteBackward');el.dispatchEvent(new Event('input',{bubbles:true}));break;}if(el?.matches('#screen input,#screen textarea')){if(el.id==='entry')remember();let a=el.selectionStart,b=el.selectionEnd;if(a===b)a=Math.max(0,a-1);el.setRangeText('',a,b,'end');el.dispatchEvent(new Event('input',{bubbles:true}));}break;}
-    case 'insert':state.overwrite=!state.overwrite;$('#format-ind').textContent=state.overwrite?'OVR':'INS';break;
-    case 'on':sheet=null;distributionParameters={};distributionRows=[];state.off=false;status();initialView();break;case 'off':sheet=null;closeGraph();distributionParameters={};distributionRows=[];state.off=true;persist();status();break;
-    case 'execute':if(graphPanel)graphPanel.execute();else execute();break;case 'approx':state.decimal=true;execute();break;
+    case 'clear':{
+      if(state.view==='list'&&state.list.native)closeCWMenu();
+      else if(state.view!=='calc'){state.stack=[];showCalc();}
+      else{
+        const answer=$('#answer');
+        const replay=model.nativeCw&&state.hasAnswer&&answer&&answer.scrollWidth-answer.clientWidth>1
+          ? {expr:state.expr,latex:state.latex}:null;
+        setExpr('');
+        if(replay)state.cwReplayAfterClear=replay;
+      }
+      break;
+    }
+    case 'delete':{
+      let el=document.activeElement;
+      if(model.nativeCw&&state.view==='calc'){
+        startCWReplay();
+        el=$('#entry');cwEditHistory.capture(el);state.cwArgument=null;state.cwReplayAfterClear=null;
+      }
+      if(isMathInput(el)){el.executeCommand('deleteBackward');el.dispatchEvent(new Event('input',{bubbles:true}));break;}
+      if(el?.matches('#screen input,#screen textarea')){
+        if(el.id==='entry')remember();
+        let start=el.selectionStart;
+        const end=el.selectionEnd;
+        if(start===end)start=Math.max(0,start-1);
+        el.setRangeText('',start,end,'end');
+        el.dispatchEvent(new Event('input',{bubbles:true}));
+      }
+      break;
+    }
+    case 'insert':{
+      const field=$('#entry');
+      if(model.nativeCw&&state.view==='calc'&&isMathInput(field)){
+        startCWReplay(field.position);
+        if(cwArgumentMatches(field,state.cwArgument)){
+          field.position=state.cwArgument.start;
+          state.cwArgument=null;
+        }else state.cwArgument=selectCWArgument(field);
+      }else if(!model.nativeCw||cwLineInput()){
+        state.overwrite=!state.overwrite;
+        if(model.nativeCw)status();else $('#format-ind').textContent=state.overwrite?'OVR':'INS';
+      }
+      break;
+    }
+    case 'cw-template-left':case 'cw-template-right':{
+      const entry=$('#entry'),direction=action.endsWith('left')?'left':'right';
+      if(isMathInput(entry)){
+        startCWReplay(entry.position);
+        state.cwArgument=null;
+        if(!jumpCWTemplate(entry,direction))navigate(direction);
+      }
+      break;
+    }
+    case 'on':clearCWData();clearCWPowerMemory();state.stack=[];state.off=false;status();initialView();break;
+    case 'off':clearCWData();clearCWPowerMemory();closeGraph();state.off=true;persist();status();break;
+    case 'execute':if(graphPanel)graphPanel.execute();else execute();break;
+    case 'approx':if(state.cwSettings)execute(true);else{state.decimal=true;execute();}break;
     case 'up':case 'down':case 'left':case 'right':if(graphPanel){const handled=graphPanel.handleKey({key:'Arrow'+action[0].toUpperCase()+action.slice(1)});if(!handled){const el=document.activeElement;if(isMathInput(el))el.executeCommand({up:'moveUp',down:'moveDown',left:'moveLeft',right:'moveRight'}[action]);}}else navigate(action);break;
     case 'sd':state.decimal=!state.decimal;state.eng=null;state.mixedAnswer=model.family==='cg'?null:false;persist();renderAnswer();document.querySelectorAll('[data-result-number]').forEach(el=>{const v=state.displayValues[Number(el.dataset.resultNumber)];el.innerHTML=resultValueHTML(v,Number(el.dataset.resultNumber));});status();break;
     case 'mixed':{if(!state.hasAnswer){insert('mixed-input');break;}assert(typeof state.answer==='number');const mixed=state.mixedAnswer??(model.family==='cg'&&state.cgWorkspace.system.fracResult==='ab/c');state.mixedAnswer=!state.approximateAnswer&&!mixed;state.decimal=state.approximateAnswer;state.eng=null;state.stack=[];showCalc();persist();break;}
     case 'eng':case 'engback':assert(typeof state.answer==='number'&&state.hasAnswer);state.eng=(state.eng===null?(state.answer===0?0:Math.floor(Math.log10(Math.abs(state.answer))/3)*3):state.eng)+(action==='engback'?3:state.eng===null?0:-3);renderAnswer();break;
     case 'calc':calcForm();break;case 'solve':solveForm();break;
-    case 'integral':case 'derivative':case 'sigma':case 'product':calculus(action);break;
+    case 'integral':case 'derivative':case 'sigma':case 'product':if(model.nativeCw&&action!=='product'&&state.view==='calc')insert(action);else calculus(action);break;
     case 'constants':constantMenu();break;case 'conversions':conversionMenu();break;case 'reset':resetMenu();break;
     case 'store':storeMenu();break;case 'recall':recallMenu();break;
     case 'mplus':case 'mminus':{const v=state.hasAnswer?state.answer:number(state.expr);assert(typeof v==='number');calc.assign('M',calc.vars.M+(action==='mplus'?1:-1)*v,state.approximateAnswer||calc.approximateVariables.has('M'));persist();status();break;}
-    case 'Ran()':insert(String(Math.random()));break;case 'Rnd(':scalarForm('四舍五入','Rnd');break;case 'factor':factor();break;case 'dms':dmsForm();break;case 'perm':binaryForm('nPr');break;case 'comb':binaryForm('nCr');break;case 'pol':binaryForm('Pol');break;case 'rec':binaryForm('Rec');break;case 'ranint':binaryForm('RanInt');break;
+    case 'Ran()':insert(String(Math.random()));break;case 'Rnd(':scalarForm('四舍五入','Rnd');break;case 'factor':factor();break;
+    case 'dms':if(model.nativeCw&&(state.view==='calc'||state.form?.layout?.kind==='cw-entry'))insert(action);else dmsForm();break;
+    case 'perm':case 'comb':if(model.nativeCw&&state.view==='calc')insert(action);else binaryForm(action==='perm'?'nPr':'nCr');break;case 'pol':binaryForm('Pol');break;case 'rec':binaryForm('Rec');break;case 'ranint':binaryForm('RanInt');break;
     case 'frac':insert('frac');break;case 'mixed-input':insert('mixed-input');break;case 'root':insert('root');break;
-    case 'undo':{if(graphPanel?.undo?.())break;const target=document.activeElement;if(target===cgLinearElement&&cgLinearEditor)cgLinearEditor.undo();else if(isMathInput(target))target.executeCommand('undo');else if(!appPanel?.undo?.())textUndo.undo();break;}
+    case 'undo':{
+      if(model.nativeCw&&state.view==='calc'){cwEditHistory.step('toggle');break;}
+      if(graphPanel?.undo?.())break;
+      const target=document.activeElement;
+      if(target===cgLinearElement&&cgLinearEditor)cgLinearEditor.undo();
+      else if(isMathInput(target))target.executeCommand('undo');
+      else if(!appPanel?.undo?.())textUndo.undo();
+      break;
+    }
     default:insert(action);
   }
   }catch(e){if(state.view==='calc'){state.error=e.message;renderAnswer();}else{const error=$('#form-error');if(error)error.textContent=e.message;else result('错误',[['提示',e.message]]);}}
 }
-document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.action==="cover"){uncover();return;}if(b.dataset.modelChoice){selectModel(b.dataset.modelChoice);return;}if(b.hasAttribute('data-picker-language')){setLanguage(state.language==='en'?'zh':'en');return;}if(b.hasAttribute('data-picker-close')){$('#model-picker').close();return;}if(b.id==='help-close'){$('#help').close();return;}if(b.dataset.gridAction){resizeStatRows(b.dataset.gridAction==='add'?1:-1);return;}if(b.dataset.mode!==undefined){chooseMode(Number(b.dataset.mode));return;}if(b.dataset.list!==undefined){state.selected=Number(b.dataset.list);execute();return;}if(b.dataset.action){if(state.view==='menu'&&model.menuShortcuts==='classwiz'&&/^[ABC]$/.test(b.dataset.alpha||'')){chooseMode('123456789ABC'.indexOf(b.dataset.alpha));return;}if(model.baseKeys&&state.mode==='base'&&state.view==='calc'&&state.base===16&&!state.shift&&/^[A-F]$/.test(b.dataset.alpha||'')){state.alpha=false;status();insert(b.dataset.alpha);return;}const a=state.shift&&b.dataset.shift?b.dataset.shift:state.alpha&&b.dataset.alpha?b.dataset.alpha:b.dataset.action;if(!['shift','alpha'].includes(a)){state.shift=false;state.alpha=!!state.alphaLock;status();}dispatch(a);}});
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.action==="cover"){uncover();return;}if(b.dataset.modelChoice){selectModel(b.dataset.modelChoice);return;}if(b.hasAttribute('data-picker-language')){setLanguage(state.language==='en'?'zh':'en');return;}if(b.hasAttribute('data-picker-close')){$('#model-picker').close();return;}if(b.id==='help-close'){$('#help').close();return;}if(b.dataset.gridAction){resizeStatRows(b.dataset.gridAction==='add'?1:-1);return;}if(b.dataset.mode!==undefined){chooseMode(Number(b.dataset.mode));return;}if(b.dataset.list!==undefined){state.selected=Number(b.dataset.list);execute();return;}if(b.dataset.action){if(state.view==='menu'&&model.menuShortcuts==='classwiz'&&/^[ABC]$/.test(b.dataset.alpha||'')){chooseMode('123456789ABC'.indexOf(b.dataset.alpha));return;}if(model.baseKeys&&state.mode==='base'&&state.view==='calc'&&state.base===16&&!state.shift&&/^[A-F]$/.test(b.dataset.alpha||'')){state.alpha=false;status();insert(b.dataset.alpha);return;}const a=cwTemplateAction(b.dataset.action)??(state.shift&&b.dataset.shift?b.dataset.shift:state.alpha&&b.dataset.alpha?b.dataset.alpha:b.dataset.action);if(!['shift','alpha'].includes(a)){state.shift=false;state.alpha=!!state.alphaLock;status();}dispatch(a);}});
 // Keep the caret when clicking calculator keys, while Tab still reaches every key.
 document.addEventListener('pointerdown',e=>{if(e.target.closest('[data-action]:not([data-action="cover"]),#screen'))coverReveal?.finish();if(e.target.closest('[data-action]'))e.preventDefault();});
 const cgHeldKeys=new Set();
@@ -851,11 +1760,36 @@ window.addEventListener('keydown',e=>{
   if(qrPanel){const action={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',Enter:'execute',Escape:'back'}[e.key];if(action&&qrPanel.handleAction(action)){e.preventDefault();e.stopImmediatePropagation();return;}}
   if(appPanel){if(appPanel.handleKey?.(e)){e.preventDefault();e.stopImmediatePropagation();return;}if(!/^F\d+$/.test(e.key)&&e.key!=='Home')return;}
   if(document.activeElement===cgLinearElement&&cgLinearEditor&&(e.ctrlKey||e.metaKey)&&['z','y'].includes(e.key.toLowerCase())){e.preventDefault();e.stopImmediatePropagation();if(e.key.toLowerCase()==='y'||e.shiftKey)cgLinearEditor.redo();else cgLinearEditor.undo();return;}
+  const cwDataPanel=state.view==='cw-screen'?state.cwScreen:state.view==='cw-distribution'?cwDistributionPanel:model.nativeCw&&state.view==='spreadsheet'?sheetPanel:null;
+  if(cwDataPanel&&!/^F\d+$/.test(e.key)&&e.key!=='Home'){
+    if(e.ctrlKey||e.metaKey||e.altKey)return;
+    const action=e.shiftKey&&e.key==='Delete'?'clear':state.shift?modifiedKeyAction(model,e.key,'shift'):null;
+    if(action){
+      e.preventDefault();e.stopImmediatePropagation();state.shift=false;status();dispatch(action);
+    }else if(cwDataPanel.handleKey(e)){
+      e.preventDefault();e.stopImmediatePropagation();
+    }
+    return;
+  }
+  if(cwEngineeringActive()){
+    const action={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',Enter:'execute','=':'execute',Escape:'back'}[e.key];
+    if(action){e.preventDefault();e.stopImmediatePropagation();dispatch(action);return;}
+  }
+  if(model.nativeCw&&!state.off&&state.view==='calc'){
+    const template=cwTemplateAction({ArrowLeft:'left',ArrowRight:'right'}[e.key]);
+    const action=template??(state.shift&&e.key==='Delete'?'insert':null);
+    if(action){e.preventDefault();e.stopImmediatePropagation();state.shift=false;status();dispatch(action);return;}
+    if($('#entry')===document.activeElement&&(e.ctrlKey||e.metaKey)&&['z','y'].includes(e.key.toLowerCase())){
+      e.preventDefault();e.stopImmediatePropagation();
+      cwEditHistory.step(e.shiftKey||e.key.toLowerCase()==='y'?'redo':'undo');
+      return;
+    }
+  }
   if(completion.handleKey(e))return;
   if(sheetPanel&&state.view==='spreadsheet'){if(sheetPanel.handleKey(e)){e.preventDefault();e.stopImmediatePropagation();return;}if(!/^F\d+$/.test(e.key)&&e.key!=='Home')return;}
   if(graphPanel&&state.view==='graph'){if(graphPanel.handleKey(e)){e.preventDefault();e.stopImmediatePropagation();return;}if(!/^F\d+$/.test(e.key)&&e.key!=='Home'&&!(e.ctrlKey||e.metaKey))return;}
   const mathTarget=isMathInput(document.activeElement);
-  const equationInput=state.form?.layout==='solve'&&document.activeElement.dataset.name==='expr';
+  const equationInput=(state.form?.layout==='solve'||state.form?.layout?.kind==='cw-entry')&&document.activeElement.dataset.name==='expr'||state.cwVerify&&state.view==='calc';
   if(document.activeElement.tagName==='BUTTON'&&e.key===' ')return;
   if(mathTarget&&(/^F\d+$/.test(e.key)||['Home','Enter','Escape'].includes(e.key)||(e.key==='='&&!equationInput)||(e.shiftKey&&e.key==='Delete')))e.stopImmediatePropagation();
   if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();e.stopImmediatePropagation();if(state.view==='form')submitForm();else execute();return;}
@@ -874,11 +1808,17 @@ window.addEventListener('keydown',e=>{
   if(state.view==='menu'&&model.nativeMenu&&/^[1-9a-z]$/i.test(e.key)){const index=model.nativeMenu.findIndex(row=>row[1]===e.key.toUpperCase());if(index>=0){e.preventDefault();chooseMode(index);}return;}
   if((state.view==='menu'||state.view==='list')&&/^\d$/.test(e.key)){e.preventDefault();if(state.view==='menu')chooseMode(e.key==='0'?9:Number(e.key)-1);else{const i=Number(e.key)-1;if(i>=0&&i<Math.min(9,state.list.items.length)){state.selected=i;execute();}}return;}
   if(state.view==='form'&&document.activeElement.tagName==='SELECT'&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))return;
+  if(model.nativeCw&&state.view==='calc'&&(state.hasAnswer||state.cwReplayAfterClear)&&['calc','complex','base'].includes(state.mode)&&e.key.startsWith('Arrow')){
+    e.preventDefault();e.stopImmediatePropagation();navigate(e.key.slice(5).toLowerCase());return;
+  }
+  if(model.nativeCw&&state.view==='calc'&&mathTarget&&!e.shiftKey&&['ArrowLeft','ArrowRight'].includes(e.key)){
+    e.preventDefault();e.stopImmediatePropagation();navigate(e.key==='ArrowLeft'?'left':'right');return;
+  }
   if(mathTarget&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))return;
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){if(state.view==='form'&&['ArrowLeft','ArrowRight'].includes(e.key))return;e.preventDefault();dispatch(e.key.replace('Arrow','').toLowerCase());return;}
   if(state.shift||state.alpha){const action=modifiedKeyAction(model,e.key,state.shift?'shift':'alpha');if(action){e.preventDefault();state.shift=false;state.alpha=!!state.alphaLock;status();dispatch(action);return;}}
   if(state.off){if(e.key==='o'){e.preventDefault();dispatch('on');}return;}
-  if(mathTarget){if(state.view==='calc'&&state.hasAnswer&&e.key.length===1&&!e.altKey){const mf=$('#entry');mf.value=/^[+*/^-]/.test(e.key)?'\\mathrm{Ans}':'';mf.position=mf.lastOffset;state.hasAnswer=false;state.error='';renderAnswer();}return;}
+  if(mathTarget){if(state.view==='calc'&&state.hasAnswer&&e.key.length===1&&!e.altKey){const mf=$('#entry');if(model.nativeCw)cwEditHistory.capture(mf);mf.value=/^[+*/^-]/.test(e.key)?'\\mathrm{Ans}':'';mf.position=mf.lastOffset;state.hasAnswer=false;state.error='';renderAnswer();}return;}
   if(state.view==='calc'&&e.key.length===1&&!e.altKey){
     if(document.activeElement.id!=='entry'){e.preventDefault();insert(e.key);return;}
     if(state.hasAnswer){e.preventDefault();insert(e.key);return;}

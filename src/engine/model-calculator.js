@@ -3,6 +3,12 @@ import {getModel} from '../models/registry.js';
 import {table} from './modes.js';
 import {polynomialRoots,linearSystem} from './modes.js';
 import {distribution} from './distributions.js';
+import {cwDistribution} from './cw-distributions.js';
+import {CW_STAT_FUNCTIONS} from './cw-statistics.js';
+import {cwDerivative,cwIntegral,cwRemainder,prepareCWAnalysis} from './cw-calculus.js';
+import {cwDecimalMemory,enforceCWScalarDomain,evaluateCWDecimal,roundCWNumber,sanitizeCWDecimals} from './cw-decimal.js';
+import {convertCWUnits} from './cw-units.js';
+import {prepareCWImplicitDivision,prepareCWInput} from './cw-notation.js';
 import {Spreadsheet} from './spreadsheet.js';
 import {normalizeCGVariableExpression} from '../models/cg-variables.js';
 import {cgMatrix,cgVector,cgMemoryJSON,createCGVectorScope,createCGArrayScope,sanitizeCGAnswers} from './cg-array-memory.js';
@@ -24,9 +30,9 @@ import {CG_FINANCIAL_FUNCTION_NAMES,normalizeCGFinancialExpression,createCGFinan
 
 // Model policy wraps the shared engine; numerical algorithms remain model-free.
 export class ModelCalculator extends Calculator {
-  constructor(modelId, saved = {}) {
+  constructor(modelId, saved = {}, display = {}) {
     const model=getModel(modelId);
-    super(saved, [...model.variables, 'Ans'],{complexVariables:model.family==='cg'});
+    super(saved, [...model.variables, 'Ans'],{complexVariables:model.family==='cg'||model.nativeCw===true});
     this.model=model;
     if(model.family==='cg'&&!['Deg','Rad','Gra'].includes(saved.angle))this.angle='Rad';
     if(model.family==='cg')this.graphMemory=initializeCGGraphState({expressions:Array(20).fill(''),enabled:Array(20).fill(true),types:Array(20).fill('y'),window:{xmin:-6.3,xmax:6.3,ymin:-3.1,ymax:3.1},xscale:1,yscale:1,parameter:{min:0,max:2*Math.PI,step:2*Math.PI/100}});
@@ -34,6 +40,11 @@ export class ModelCalculator extends Calculator {
     this.booleanNumbers=model.family==='cg';
     if(model.family==='cg'){this.nativeAnswers=sanitizeCGAnswers(saved.nativeAnswers);this.functionMemory=sanitizeCGFunctionMemory(saved.functionMemory);}
     if(model.family==='cg'){const exact=sanitizeCGExactState(saved,this.vars);this.exactAnswer=exact.exactAnswer;this.exactVariables=exact.exactVariables;this.lastExactResult=null;this.cgSimplify='Auto';this.cgComplexMode='real';}
+    if(model.nativeCw){
+      this.cwDecimals=sanitizeCWDecimals(saved.cwDecimals,this.vars);
+      this.lastExactResult=null;
+      this.cwRounding={format:display.format??'Norm',digits:display.digits??10};
+    }
     if(model.family==='cg'){const native=sanitizeCGStatisticalNative(saved.statisticalNative);this.statisticalMemory=native.registers;this.statisticalRegression=native.regression;}
     if(model.family==='cg'){const financial=sanitizeCGFinancialNative(saved.financialNative);this.financialSettings=financial.settings;this.financialMemory=financial.memory;}
     this.definitions={};
@@ -50,13 +61,17 @@ export class ModelCalculator extends Calculator {
   differentiate(...args){return Calculator.prototype.differentiate.apply(readOnlyCalculator(this),args);}
   sequence(...args){return Calculator.prototype.sequence.apply(readOnlyCalculator(this),args);}
   solve(...args){return Calculator.prototype.solve.apply(readOnlyCalculator(this),args);}
-  distribution(type,parameters){assert(this.model.distribution||this.model.statDistributions,'此型号不支持分布应用');return distribution(type,parameters);}
-  createSpreadsheet(){assert(this.model.spreadsheet,'此型号不支持数据表格应用');return new Spreadsheet(this);}
+  distribution(type,parameters){
+    assert(this.model.distribution||this.model.statDistributions,'此型号不支持分布应用');
+    return this.model.nativeCw?cwDistribution(type,parameters):distribution(type,parameters);
+  }
+  createSpreadsheet(options){assert(this.model.spreadsheet,'此型号不支持数据表格应用');return new Spreadsheet(this,options);}
   prepareCGExpression(expression){return normalizeCGVariableExpression(normalizeCGStatisticalExpression(normalizeCGFinancialExpression(rewriteCGMetricExpression(rewriteCGCalcExpression(expandCGMemoryExpression(expression,{functionMemory:this.functionMemory,relations:this.graphMemory}))))));}
   compile(expression) {
     if(this.model?.family==='cg')expression=this.prepareCGExpression(expression);
+    if(this.model?.nativeCw)expression=prepareCWAnalysis(prepareCWImplicitDivision(prepareCWInput(expression)));
     if(this.examination)assert(!/\b(?:Vct[A-Z]|VctAns|cross|dot|angleBetween|unitVector|norm|DotP|CrossP|Angle|UnitV|Norm)\b/.test(expression),'Examination Mode: vector commands are disabled');
-    const code=compileSafe(expression,[...this.functionNames(),...(this.model.extraFunctions||[]),...(this.model.family==='cg'?[...CG_FINANCIAL_FUNCTION_NAMES,...CG_STATISTICAL_FUNCTION_NAMES]:[])],{maxArrayLength:this.model.inputArrayLimit||16});
+    const code=compileSafe(expression,[...this.functionNames(),...(this.model.extraFunctions||[]),...(this.model.nativeCw?[...CW_STAT_FUNCTIONS,'CWVectorMultiply','CWMatrixPower','CWRemainder','CWLog','CWConvertUnits']:[]),...(this.model.family==='cg'?[...CG_FINANCIAL_FUNCTION_NAMES,...CG_STATISTICAL_FUNCTION_NAMES]:[])],{maxArrayLength:this.model.inputArrayLimit||16});
     if(this.model?.matrixNames||this.model?.vectorNames)math.parse(normalize(expression)).traverse(node=>{
       if(node.isArrayNode&&this.model.matrixMax)assert(node.items.length<=Math.max(this.model.matrixMax,...(this.model.vectorDimensions||[2,3])),'矩阵尺寸超出型号限制');
       if(!node.isSymbolNode)return;
@@ -67,6 +82,7 @@ export class ModelCalculator extends Calculator {
   }
   define(name, expression) {
     assert(this.functionNames().includes(name), '此型号不支持注册函数');
+    if(this.model.nativeCw)expression=prepareCWInput(expression);
     this.compile(expression); // Validate without evaluating at a potentially singular x.
     const definitions={...this.definitions, [name]:expression};
     const visit=(key, path=[])=>{
@@ -105,6 +121,16 @@ export class ModelCalculator extends Calculator {
   evaluate(expression, extra = {}, complex = false) {
     if(this.model.family==='cg')this.cgNumericalNotice=null;
     if(this.model.family==='cg')expression=this.prepareCGExpression(expression);
+    if(this.model.nativeCw){
+      this.lastExactResult=null;
+      expression=prepareCWInput(expression);
+      const decimal=evaluateCWDecimal(expression,this.vars,this.cwDecimals,extra,this.angle,this.definitions,this.cwRounding,complex);
+      if(decimal){
+        this.lastEvaluationApproximate=this.isApproximate(expression);
+        this.lastExactResult=decimal.exact;
+        return decimal.value;
+      }
+    }
     if(this.model.matrixMax||this.model.vectorDimensions){
       const inspect=(source,depth=0)=>{
         assert(depth<16,'算式过长');
@@ -128,6 +154,11 @@ export class ModelCalculator extends Calculator {
     assert(Object.hasOwn(this.vars,name),'变量或函数未定义');
     validateValue(value,true,this.valueLimit);const unchanged=Object.is(this.vars[name],value);this.vars[name]=value;
     if(approximate)this.approximateVariables.add(name);else this.approximateVariables.delete(name);
+    if(this.model?.nativeCw){
+      const exact=cwDecimalMemory(exactValue,value);
+      if(exact===null)delete this.cwDecimals[name];
+      else this.cwDecimals[name]=exact;
+    }
     if(this.model?.family==='cg'){
       const existing=name==='Ans'?this.exactAnswer:this.exactVariables?.[name];let exact=!approximate?cgExactForValue(exactValue===undefined&&unchanged?existing:exactValue,value):null;if(exact&&(this.cgSimplify!=='Manual'||this.cgComplexMode!=='real'))exact=reduceCGRational(exact);
       if(name==='Ans')this.exactAnswer=exact?cgRationalJSON(exact):null;else{this.exactVariables??={};if(exact)this.exactVariables[name]=cgRationalJSON(exact);else delete this.exactVariables[name];}
@@ -139,6 +170,24 @@ export class ModelCalculator extends Calculator {
   scope(extra = {}) {
     if(this.model?.family==='cg')extra={...createCGArrayScope(this,this.arrayMemory),...extra};
     const scope=super.scope(extra);
+    if(this.model?.nativeCw){
+      enforceCWScalarDomain(scope,this.angle);
+      scope.Rnd=extra.Rnd??(value=>{
+        assert(typeof value==='number');
+        return roundCWNumber(value,this.cwRounding.format,this.cwRounding.digits);
+      });
+      scope.integral=(source,a,b,tol=1e-10)=>cwIntegral(this,source,a,b,tol,extra);
+      scope.diff=(source,x,tol=1e-16)=>cwDerivative(this,source,x,tol,extra);
+      scope.sum=(source,a,b)=>{assert(Math.abs(a)<1e10&&Math.abs(b)<1e10,'自变量错');return this.sequence(source,a,b,false,extra);};
+      scope.CWRemainder=(left,right)=>cwRemainder(left,right).value;
+      scope.CWLog=(a,b)=>b===undefined?math.log10(a):math.log(b,a);
+      scope.CWConvertUnits=convertCWUnits;
+      scope.Ran=()=>Math.floor(Math.random()*1000)/1000;
+      scope.RanInt=(a,b)=>{
+        assert(Number.isInteger(a)&&Number.isInteger(b)&&a<b&&Math.abs(a)<1e10&&Math.abs(b)<1e10&&b-a<1e10,'数学错误');
+        return a+Math.floor(Math.random()*(b-a+1));
+      };
+    }
     if(this.model?.family==='cg'){
       for(const name of this.model.matrixNames||[])if(extra[name]!==undefined)scope[name]=cgMatrix(extra[name]);
       for(const name of this.model.vectorNames||[])if(extra[name]!==undefined)scope[name]=cgVector(extra[name]);
@@ -169,7 +218,9 @@ export class ModelCalculator extends Calculator {
       this.functionCallStack.push(name);
       try {
         const calls=Object.fromEntries(this.functionNames().map(key=>[key,t=>evaluate(key,t,[...path,name])]));
-        const value=this.compile(this.definitions[name]).evaluate({...scope,x,...calls});
+        const source=this.definitions[name];
+        const decimal=this.model.nativeCw?evaluateCWDecimal(source,this.vars,this.cwDecimals,{...extra,x},this.angle,this.definitions,this.cwRounding):null;
+        const value=decimal?decimal.value:this.compile(source).evaluate({...scope,x,...calls});
         validateValue(value,false); return value;
       } finally {this.functionCallStack.pop();}
     };
@@ -195,5 +246,5 @@ export class ModelCalculator extends Calculator {
     assert(Array.isArray(values)&&values.length>0&&values.length<=this.model.tableRows.single&&values.every(value=>typeof value==='number'&&Number.isFinite(value)),'表格输入数量或数值错误');
     return values.map(x=>[x,this.evaluate(expression,{x})]);
   }
-  save() {return {...super.save(), definitions:{...this.definitions},approximateVariables:[...this.approximateVariables],...(this.model?.family==='cg'?{financialNative:snapshotCGFinancialNative(this),nativeAnswers:sanitizeCGAnswers(this.nativeAnswers),statisticalNative:snapshotCGStatisticalNative(this),functionMemory:sanitizeCGFunctionMemory(this.functionMemory),...sanitizeCGExactState(this,this.vars)}:{})};}
+  save() {return {...super.save(), definitions:{...this.definitions},approximateVariables:[...this.approximateVariables],...(this.model?.nativeCw?{cwDecimals:structuredClone(this.cwDecimals)}:{}),...(this.model?.family==='cg'?{financialNative:snapshotCGFinancialNative(this),nativeAnswers:sanitizeCGAnswers(this.nativeAnswers),statisticalNative:snapshotCGStatisticalNative(this),functionMemory:sanitizeCGFunctionMemory(this.functionMemory),...sanitizeCGExactState(this,this.vars)}:{})};}
 }

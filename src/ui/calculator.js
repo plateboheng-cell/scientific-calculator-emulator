@@ -2,6 +2,7 @@ import {physicalKeyboardHTML} from './physical-keyboard.js';
 import {APP_NAME} from '../brand.js';
 import {esc} from './html.js';
 import {keySymbolHTML,shiftKeySymbolHTML} from './key-symbols.js';
+import {cwLCDStatusHTML} from './cw-lcd-status.js';
 export function keyHTML(k,kind=''){
   const symbol=keySymbolHTML(k),label=symbol?'分数':k[0];
   const secondary=`<span class="shift">${shiftKeySymbolHTML(k)||esc(k[2]||'')}</span><span class="alpha">${esc(k[4]||'')}</span>${k[6]?`<span class="base-legend">${esc(k[6])}</span>`:''}`;
@@ -10,7 +11,8 @@ export function keyHTML(k,kind=''){
 }
 
 export function calculatorHTML(model) {
-return `<section class="calculator model-${model.family} ${model.appearance||''}" aria-label="${esc(APP_NAME)}">${modelHeaderHTML(model)}<div class="screen-rim"><div class="status"><span id="shift-ind" class="muted">S</span><span id="alpha-ind" class="muted">A</span><span id="memory-ind" class="muted">M</span><span id="angle-ind">D</span><span id="format-ind">Math</span><span id="mode-label">计算</span></div><section class="lcd" id="screen" aria-label="计算器屏幕"></section></div>${keyboardHTML(model)}<div class="foot">${model.family==='ti'?'<button class="help-button" data-action="menu">应用菜单</button>':''}<button class="help-button" data-action="models">切换型号</button><button class="help-button" data-action="cover" title="重播揭盖动画">揭盖</button><button class="help-button" data-action="language" aria-label="语言 / Language">中文 / English</button><button class="help-button" data-action="help">${model.graphing?'键盘帮助':'F1 键盘帮助'}</button></div></section><dialog id="help"><button id="help-close">关闭 Esc</button><h2>键盘操作</h2><table><tbody>${helpRows(model).map(([a,b])=>`<tr><td><kbd>${a}</kbd></td><td>${b}</td></tr>`).join('')}</tbody></table><h3>公式输入</h3><p>按分数、根号、乘方等按键插入数学模板，在公式空位中填写。方向键移动公式光标，Tab 切换空位；Enter 进入下一项，最后一项 Enter 计算，Ctrl+Enter 可直接计算。</p><p class="completion-help">输入函数前缀后按 Tab 补全；↑↓ 选择，Esc 关闭；Ctrl+Space 查看候选。无候选时 Tab 保持公式空位导航。</p><h3>数据输入</h3><p>矩阵、向量、方程和统计数据按单元格填写。所有空位起始为空，返回编辑会保留本人输入的内容。</p></dialog>`;
+const status=model.nativeCw?cwLCDStatusHTML():'<div class="status"><span id="shift-ind" class="muted">S</span><span id="alpha-ind" class="muted">A</span><span id="memory-ind" class="muted">M</span><span id="angle-ind">D</span><span id="format-ind">Math</span><span id="mode-label">计算</span></div>';
+return `<section class="calculator model-${model.family} ${model.appearance||''}" aria-label="${esc(APP_NAME)}">${modelHeaderHTML(model)}<div class="screen-rim">${status}<section class="lcd" id="screen" aria-label="计算器屏幕"></section></div>${keyboardHTML(model)}<div class="foot">${model.family==='ti'?'<button class="help-button" data-action="menu">应用菜单</button>':''}<button class="help-button" data-action="models">切换型号</button><button class="help-button" data-action="cover" title="重播揭盖动画">揭盖</button><button class="help-button" data-action="language" aria-label="语言 / Language">中文 / English</button><button class="help-button" data-action="help">${model.graphing?'键盘帮助':'F1 键盘帮助'}</button></div></section><dialog id="help"><button id="help-close">关闭 Esc</button><h2>键盘操作</h2><table><tbody>${helpRows(model).map(([a,b])=>`<tr><td><kbd>${a}</kbd></td><td>${b}</td></tr>`).join('')}</tbody></table><h3>公式输入</h3><p>按分数、根号、乘方等按键插入数学模板，在公式空位中填写。方向键移动公式光标，Tab 切换空位；Enter 进入下一项，最后一项 Enter 计算，Ctrl+Enter 可直接计算。</p><p class="completion-help">输入函数前缀后按 Tab 补全；↑↓ 选择，Esc 关闭；Ctrl+Space 查看候选。无候选时 Tab 保持公式空位导航。</p><h3>数据输入</h3><p>矩阵、向量、方程和统计数据按单元格填写。所有空位起始为空，返回编辑会保留本人输入的内容。</p></dialog>`;
 }
 
 function helpRows(model){

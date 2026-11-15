@@ -7,6 +7,8 @@ import {cgMatrix,cgVector,cgMemoryJSON,sanitizeCGAnswers} from '../engine/cg-arr
 import {sanitizeCGStatisticalNative} from '../engine/cg-statistical-functions.js';
 import {sanitizeCGFunctionMemory} from '../engine/cg-function-memory.js';
 import {sanitizeCGExactState} from '../engine/cg-exact-state.js';
+import {sanitizeCWSettings} from '../engine/cw-settings.js';
+import {sanitizeCWDecimals} from '../engine/cw-decimal.js';
 
 export const STORAGE_KEY = 'cnx-v2';
 export const LEGACY_KEY = 'cnx-v1';
@@ -46,23 +48,27 @@ export function sanitizeGraph(source={},count=4,includeMemories=true) {
 
 export function sanitizeProfile(source = {}, modelId = 'cnx',includeExam=true) {
   const s = object(source),model=getModel(modelId),matrixNames=model.matrixNames||['MatA','MatB','MatC','MatD'],vectorNames=model.vectorNames||['VctA','VctB','VctC','VctD'],matrixMax=model.matrixMax||4,vectorDimensions=model.vectorDimensions||[2,3];
-  const scalar=value=>finite(value)||model.family==='cg'&&value&&finite(value.re)&&finite(value.im)&&Math.abs(value.re)<1e100&&Math.abs(value.im)<1e100;
+  const scalar=value=>finite(value)||(model.family==='cg'||model.nativeCw)&&value&&finite(value.re)&&finite(value.im)&&Math.abs(value.re)<1e100&&Math.abs(value.im)<1e100;
   const matrices = model.family==='cg'?cgArrayBank(s.matrices,matrixNames,'matrix'):Object.fromEntries(Object.entries(object(s.matrices)).filter(([k,v]) => matrixNames.includes(k) && Array.isArray(v) && v.length >= 1 && v.length <= matrixMax && v.every(r => Array.isArray(r) && r.length === v[0].length && r.length >= 1 && r.length <= matrixMax && r.every(finite))));
   const vectors = model.family==='cg'?cgArrayBank(s.vectors,vectorNames,'vector'):Object.fromEntries(Object.entries(object(s.vectors)).filter(([k,v]) => vectorNames.includes(k) && Array.isArray(v) && vectorDimensions.includes(v.length) && v.every(finite)));
   const exam=model.family==='cg'&&includeExam?sanitizeCGExam(s.cgExam,backup=>sanitizeProfile(backup,'cg50',false)):null;
   const savedVariables=Object.fromEntries(Object.entries(object(s.calculator?.vars)).filter(([key,value])=>[...model.variables,'Ans'].includes(key)&&scalar(value)).map(([key,value])=>[key,typeof value==='number'?value:{re:value.re,im:value.im}]));
   return {
-    calculator:{approximateVariables:Array.isArray(s.calculator?.approximateVariables)?s.calculator.approximateVariables.filter(k=>[...model.variables,'Ans'].includes(k)):[], angle:['Deg','Rad','Gra'].includes(s.calculator?.angle)?s.calculator.angle:model.family==='cg'?'Rad':'Deg', vars:savedVariables, definitions:model.discardDefinitions?{}:Object.fromEntries(Object.entries(object(s.calculator?.definitions)).filter(([k,v]) => (model.functionNames||['f','g']).includes(k) && string(v))),...(model.family==='cg'?{financialNative:sanitizeCGFinancialNative(s.calculator?.financialNative),nativeAnswers:sanitizeCGAnswers(s.calculator?.nativeAnswers),statisticalNative:sanitizeCGStatisticalNative(s.calculator?.statisticalNative),functionMemory:sanitizeCGFunctionMemory(s.calculator?.functionMemory),...sanitizeCGExactState(object(s.calculator),savedVariables)}:{})},
+    calculator:{approximateVariables:Array.isArray(s.calculator?.approximateVariables)?s.calculator.approximateVariables.filter(k=>[...model.variables,'Ans'].includes(k)):[], angle:['Deg','Rad','Gra'].includes(s.calculator?.angle)?s.calculator.angle:model.family==='cg'?'Rad':'Deg', vars:savedVariables, definitions:model.discardDefinitions?{}:Object.fromEntries(Object.entries(object(s.calculator?.definitions)).filter(([k,v]) => (model.functionNames||['f','g']).includes(k) && string(v))),...(model.nativeCw?{cwDecimals:sanitizeCWDecimals(s.calculator?.cwDecimals,savedVariables)}:{}),...(model.family==='cg'?{financialNative:sanitizeCGFinancialNative(s.calculator?.financialNative),nativeAnswers:sanitizeCGAnswers(s.calculator?.nativeAnswers),statisticalNative:sanitizeCGStatisticalNative(s.calculator?.statisticalNative),functionMemory:sanitizeCGFunctionMemory(s.calculator?.functionMemory),...sanitizeCGExactState(object(s.calculator),savedVariables)}:{})},
     ...(model.baseKeys?{base:[2,8,10,16].includes(s.base)?s.base:10}:{}),
     mode:model.modes.some(mode=>mode[3]===s.mode)?s.mode:(model.defaultMode||'calc'),
     decimal:s.decimal === true, format:['Norm','Fix','Sci'].includes(s.format)?s.format:'Norm',
     digits:Number.isInteger(s.digits) && s.digits >= (s.format==='Fix'?0:1) && s.digits <= (s.format==='Fix'?9:10) ? s.digits : (s.format==='Fix'?9:10),
     history:Array.isArray(s.history)?s.history.filter(h => h && string(h.expr) && typeof h.answer === 'string' && model.modes.some(mode=>mode[3]===h.mode)).slice(-(model.family==='cg'?30:100)).map(h => ({expr:h.expr, latex:string(h.latex), answer:h.answer.slice(0,1000), mode:h.mode})):[],
-    matrices:Object.fromEntries(Object.entries(matrices).map(([k,v])=>[k,v.map(row=>row.slice())])), vectors:Object.fromEntries(Object.entries(vectors).map(([k,v])=>[k,v.slice()])), statsRows:!model.volatileStatistics&&Array.isArray(s.statsRows)?s.statsRows.filter(r => Array.isArray(r) && r.length===3 && r.every(finite) && Number.isInteger(r[2]) && r[2]>0).slice(0,100).map(row=>row.slice()):[],
+    matrices:Object.fromEntries(Object.entries(matrices).map(([k,v])=>[k,v.map(row=>row.slice())])), vectors:Object.fromEntries(Object.entries(vectors).map(([k,v])=>[k,v.slice()])), statsRows:!model.volatileStatistics&&Array.isArray(s.statsRows)?s.statsRows.filter(r => Array.isArray(r) && r.length===3 && r.every(finite) && Number.isInteger(r[2]) && r[2]>0).slice(0,model.nativeCw?160:100).map(row=>row.slice()):[],
     graph:{...sanitizeGraph(s.graph,model.graphFunctions||4),xscale:finite(s.graph?.xscale)&&s.graph.xscale>=0?s.graph.xscale:1,yscale:finite(s.graph?.yscale)&&s.graph.yscale>=0?s.graph.yscale:1},
     regression:['single','linear','quadratic','log','exp','abexp','power','inverse'].includes(s.regression)?s.regression:'single',
     frequency:s.frequency===true,
     tiSettings:sanitizeTiSettings(s.tiSettings??{result:s.mode==='complex'?'rect':'real',notation:s.format==='Sci'?'Sci':'Norm',decimals:s.format==='Fix'?s.digits:s.format==='Sci'&&Number.isInteger(s.digits)?s.digits-1:null}),
+    ...(model.nativeCw?{
+      cwSettings:sanitizeCWSettings(s.cwSettings,s.decimal===true),
+      cwSheetSettings:{autoCalculate:s.cwSheetSettings?.autoCalculate!==false,showValue:s.cwSheetSettings?.showValue===true},
+    }:{}),
     ...(model.family==='cg'?{cgWorkspace:sanitizeCGWorkspace(s.cgWorkspace)}:{}),
     ...(exam?{cgExam:exam}:{}),
     menuSelections:Object.fromEntries(Object.entries(object(s.menuSelections)).filter(([k,v])=>k.length<160 && Number.isInteger(v) && v>=0 && v<200)),
@@ -71,6 +77,7 @@ export function sanitizeProfile(source = {}, modelId = 'cnx',includeExam=true) {
 
 export function createSession(profile = {}, language = 'zh', modelId = 'cnx') {
   const saved = sanitizeProfile(profile,modelId);
+  if(saved.cwSettings)saved.decimal=saved.cwSettings.inputOutput.endsWith('-decimal');
   if(modelId==='ti36xpro'&&['calc','complex','base'].includes(saved.mode))saved.mode=saved.tiSettings.base!==10?'base':saved.tiSettings.result==='real'?'calc':'complex';
   return {...saved, language, view:'calc', shift:false, alpha:false, off:false, expr:'', latex:'', answer:0, hasAnswer:false,
     historyIndex:-1, base:modelId==='ti36xpro'?saved.tiSettings.base:saved.base||10, form:null, list:null, selected:0, stack:[], undo:[], eng:null, pending:[], error:'', displayValues:[], displayApproximate:[], resultHasApproximateHeading:false, approximateAnswer:false};

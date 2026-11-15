@@ -85,12 +85,17 @@ export function linearSystem(rows,maxSize=4){
   for(let k=0;k<n;k++){let p=k;for(let i=k+1;i<n;i++)if(Math.abs(a[i][k])>Math.abs(a[p][k]))p=i;assert(Math.abs(a[p][k])>1e-12,'无唯一解');[a[p],a[k]]=[a[k],a[p]];const d=a[k][k];for(let j=k;j<=n;j++)a[k][j]/=d;for(let i=0;i<n;i++)if(i!==k){const f=a[i][k];for(let j=k;j<=n;j++)a[i][j]-=f*a[k][j];}}
   const result=a.map(r=>r[n]);assert(result.every(Number.isFinite),'结果超出数值范围');return result;
 }
-export function inequality(c,op){
-  assert(['>','<','>=','<='].includes(op));c=trim(c);if(c.every(x=>x===0))return op.includes('=')?'ℝ':'∅';
+export function inequalityIntervals(c,op){
+  assert(['>','<','>=','<='].includes(op));c=trim(c);
+  if(c.every(x=>x===0))return op.includes('=')?[{l:-Infinity,r:Infinity,lc:false,rc:false}]:[];
   const roots=realRoots(c),bounds=[-Infinity,...roots,Infinity],segments=[],include=op.includes('=');const check=y=>op.startsWith('>')?y>0:y<0;
   for(let i=0;i<bounds.length-1;i++){const l=bounds[i],r=bounds[i+1],x=l===-Infinity&&r===Infinity?0:!Number.isFinite(l)?r-Math.max(1,Math.abs(r)):!Number.isFinite(r)?l+Math.max(1,Math.abs(l)):(l+r)/2;if(check(polyValue(c,x)))segments.push({l,r,lc:include&&Number.isFinite(l),rc:include&&Number.isFinite(r)});}
   if(include)for(const r of roots)if(!segments.some(s=>s.l===r||s.r===r))segments.push({l:r,r,lc:true,rc:true});
   segments.sort((a,b)=>a.l-b.l);const merged=[];for(const s of segments){const prev=merged.at(-1);if(prev&&prev.r===s.l&&(prev.rc||s.lc)){prev.r=s.r;prev.rc=s.rc;}else merged.push({...s});}
+  return merged;
+}
+export function inequality(c,op){
+  const merged=inequalityIntervals(c,op);
   if(!merged.length)return '∅';if(merged.length===1&&merged[0].l===-Infinity&&merged[0].r===Infinity)return 'ℝ';
   return merged.map(s=>s.l===s.r?`{${decimal(s.l)}}`:`${s.lc?'[':'('}${s.l===-Infinity?'−∞':decimal(s.l)}, ${s.r===Infinity?'+∞':decimal(s.r)}${s.rc?']':')'}`).join(' ∪ ');
 }
@@ -109,10 +114,9 @@ function centeredMoments(points,n){
   assert([mx,my,xx,yy,xy].every(Number.isFinite),'统计结果超出数值范围');
   return {x0,y0,mx,my,xx,yy,xy};
 }
-export function statistics(rows,regression='single'){
+function summarizeStatistics(rows,paired){
   assert(Array.isArray(rows)&&rows.length>0&&rows.length<=1000,'请先输入数据');
-  assert(['single','linear','quadratic','log','exp','abexp','power','inverse'].includes(regression),'回归类型错误');
-  const paired=regression!=='single';let n=0;const points=[];
+  let n=0;const points=[];
   for(const row of rows){assert(Array.isArray(row)&&row.length>=1&&row.length<=3&&(!paired||row.length>=2),'数据格式错误');const [x,y=0,f=1]=row;assert(Number.isFinite(x)&&Number.isFinite(y)&&Number.isInteger(f)&&f>0&&n+f<=100000,'数据或频数错误');n+=f;points.push([x,y,f]);}
   const sx=stableSum(points.map(([x,,f])=>x*f)),sx2=stableSum(points.map(([x,,f])=>x*x*f)),sy=stableSum(points.map(([,y,f])=>y*f)),sy2=stableSum(points.map(([,y,f])=>y*y*f)),sxy=stableSum(points.map(([x,y,f])=>x*y*f));
   assert([sx,sx2,sy,sy2,sxy].every(Number.isFinite),'统计结果超出数值范围');
@@ -120,8 +124,24 @@ export function statistics(rows,regression='single'){
   const sorted=points.map(([x,,f])=>({x,f})).sort((a,b)=>a.x-b.x),at=i=>{let k=0;for(const q of sorted){k+=q.f;if(i<k)return q.x;}};
   const median=(lo,hi)=>{const len=hi-lo;return len%2?at(lo+(len-1)/2):at(lo+len/2-1)/2+at(lo+len/2)/2;};
   const out={n,'Σx':sx,'Σx²':sx2,'x̄':sx/n,'σx²':variance,'σx':Math.sqrt(variance),'sx':n>1?Math.sqrt(moments.xx/(n-1)):NaN,min:at(0),Q1:n>1?median(0,Math.floor(n/2)):at(0),Med:median(0,n),Q3:n>1?median(Math.ceil(n/2),n):at(0),max:at(n-1)};
+  if(paired)Object.assign(out,{'Σy':sy,'Σy²':sy2,'Σxy':sxy,'ȳ':sy/n,'σy':Math.sqrt(moments.yy/n),'sy':n>1?Math.sqrt(moments.yy/(n-1)):NaN});
+  return {out,points,moments,n};
+}
+export function describeStatistics(rows,paired=false){
+  const {out,points,moments,n}=summarizeStatistics(rows,paired);
+  out['sx²']=n>1?moments.xx/(n-1):NaN;
+  if(paired)Object.assign(out,{
+    'Σx³':stableSum(points.map(([x,,f])=>x**3*f)), 'Σx⁴':stableSum(points.map(([x,,f])=>x**4*f)),
+    'Σx²y':stableSum(points.map(([x,y,f])=>x*x*y*f)), 'σy²':moments.yy/n, 'sy²':n>1?moments.yy/(n-1):NaN,
+    minY:Math.min(...points.map(([,y])=>y)),maxY:Math.max(...points.map(([,y])=>y)),
+  });
+  return out;
+}
+export function statistics(rows,regression='single'){
+  assert(['single','linear','quadratic','log','exp','abexp','power','inverse'].includes(regression),'回归类型错误');
+  const paired=regression!=='single';
+  const {out,points,n}=summarizeStatistics(rows,paired);
   if(!paired)return out;
-  Object.assign(out,{'Σy':sy,'Σy²':sy2,'Σxy':sxy,'ȳ':sy/n,'σy':Math.sqrt(moments.yy/n),'sy':n>1?Math.sqrt(moments.yy/(n-1)):NaN});
   if(regression==='quadratic'){
     const fit=fitQuadratic(points),result={...out,...fit};
     Object.defineProperty(result,'quadraticFit',{value:fit.quadraticFit});return result;

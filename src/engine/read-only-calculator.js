@@ -9,6 +9,6 @@ export function readOnlyCalculator(calculator){
   copy.approximateVariables=new Set(calculator.approximateVariables||[]);
   copy.functionCallStack=[...(calculator.functionCallStack||[])];
   copy.definitions={...(calculator.definitions||{})};
-  for(const key of ['nativeAnswers','arrayMemory','financialSettings','financialMemory','statisticalMemory','statisticalRegression','functionMemory','graphMemory','exactAnswer','exactVariables','lastExactResult'])if(calculator[key]!==undefined)copy[key]=structuredClone(calculator[key]);
+  for(const key of ['nativeAnswers','arrayMemory','financialSettings','financialMemory','statisticalMemory','statisticalRegression','functionMemory','graphMemory','exactAnswer','exactVariables','lastExactResult','cwDecimals'])if(calculator[key]!==undefined)copy[key]=structuredClone(calculator[key]);
   isolated.add(copy);return copy;
 }

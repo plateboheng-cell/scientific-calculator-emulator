@@ -14,7 +14,7 @@ scientific calculator simulator 是独立的 JavaScript/Electron 开源实现。
 | --- | --- | --- |
 | fx-991CN X | 可用 | 十种模式、SHIFT/ALPHA、CALC/SOLVE、M 和 CODATA 2010 常数 |
 | fx-991CN CW | 实验性 | 48 键、HOME 分页、目录/工具/转换、f/g、45/30 行函数表、47 项 CODATA 2018 常数 |
-| fx-999CN CW | 实验性 | 第一代白色款、十二应用 HOME、七种分布、45 项离散列表、A1:E45 数据表格 |
+| fx-999CN CW | 实验性 | 第一代白色款、十二应用 HOME、点阵 LCD、七种分布、A1:E45 数据表格及高精度实数和复数计算 |
 | TI-36X Pro | 实验性 | 多击键、八变量、六行 MODE、工程/极坐标/CLASSIC、20 常数、七种分布、Auto/Ask-x 及型号求解/矩阵限制 |
 | fx-CG50 | 实验性 | 20 条 Y=、绘图/追踪、五种线型、缩放/视窗、根/极值/交点、坐标计算与积分 |
 | fx-991EX | 实验性 | 独立英文键盘、十二应用与 1–9/A/B/C 菜单、九变量、计算模式 SOLVE、45/30 行函数表、分布与退出即清空的数据表格 |
@@ -25,7 +25,7 @@ scientific calculator simulator 是独立的 JavaScript/Electron 开源实现。
 
 ## 开始使用
 
-可按下方命令构建当前源码。**正在准备 GitHub v0.4.0，包含截至本地 0.13.0 的开发成果。** 本地验证和安装状态见 [VERIFICATION.md](docs/VERIFICATION.md)。
+Windows x64 版本可在 [GitHub Releases](https://github.com/plateboheng-cell/scientific-calculator-emulator/releases) 下载。测试结果见 [v0.4.9 验收记录](docs/VERIFICATION.md)。
 
 - Windows x64 便携 EXE 可直接运行；解包目录必须完整保留，再打开 `scientific calculator simulator.exe`。
 - 首次运行选择型号；底部“切换型号”可随时返回。
@@ -34,7 +34,7 @@ scientific calculator simulator 是独立的 JavaScript/Electron 开源实现。
 - 每个型号独立保存历史、实数变量、设置和支持的数据；语言共用。切换清除未提交输入。
 - 旧 `cnx-v1` 数据仅迁移到 X，并保留旧键作为回退备份。
 
-用户数据保存在本机 Electron 用户目录中，清除目录会导致数据丢失。复数 Ans、矩阵/向量答案寄存器为会话值。999 数据表格不持久化，切换型号、电源操作或重启会清空。EX 的数据表格及统计数据在离开对应应用时也会清空；具体保留规则以型号说明为准。
+用户数据保存在本机 Electron 用户目录中。fx-999CN CW 档案可保存受支持的实数与复数低位。切换型号、电源操作或重启会清空当前 999 工作表，通过「工具 → 桌面工作表」可保存本地副本。EX 离开对应应用时会清空数据表格或统计数据。具体保留规则见 [999 型号说明](docs/999CW.md)。
 
 ## 功能与边界
 

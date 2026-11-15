@@ -1,5 +1,59 @@
 # Changelog
 
+## 0.4.9 — fx-999CN CW editing and replay, 2026-11-10
+
+- Preserve natural formulas and caret selections across native menus. Implement the TOOLS Undo and redo sequence and desktop undo shortcuts.
+- Follow the manual's template navigation and SHIFT DEL argument capture, including its square-root example.
+- Separate horizontal result scrolling from formula replay. Preserve the last Ans while viewing or editing a result.
+
+## 0.4.8 — fx-999CN CW complex input and precision, 2026-11-10
+
+- Use the native polar key and catalog entry in both editors. Follow the manual's precedence for juxtaposition, polar input, permutation, combination and explicit division.
+- Render complex components on separate lines in the three non-Math-output modes. Apply coordinate conversion to the displayed result or selected polynomial root.
+- Retain 23 decimal digits per component for supported complex expressions and persist them in Ans and variables. Support the documented complex integer exponent range and compare retained components in Verify.
+
+## 0.4.7 — fx-999CN CW LCD, 2026-11-09
+
+- Draw both HOME pages with crisp-edged icons, manual-based LCD proportions and four contrast tones.
+- Use the bundled dot-matrix numeric and Latin glyphs in expressions, results and data grids. Keep vertical fractions editable and readable in narrow, zoomed windows.
+- Place the angle, input, format and replay indicators in fixed positions. Retain the LCD background when powering off.
+
+## 0.4.6 — fx-999CN CW catalog and engineering notation, 2026-11-09
+
+- Add all eleven engineering suffixes and degree, radian and gradian suffixes in natural and linear input. Follow the manual's ENG shift and exit sequence.
+- Preserve the entry caret when using the common catalog in calculator applications, formulas and supported numeric editors. Honor the native linear priority of percentage, permutations, combinations, dot product and remainder.
+- Apply the configured Rnd precision to retained decimal arithmetic, registered functions and worksheet cells.
+
+## 0.4.5 — fx-999CN CW distribution and spreadsheet, 2026-11-09
+
+- Improve narrow normal intervals and discrete distribution accuracy, with counts up to one billion. Add direct right-tail probabilities and quantiles in a separate distribution menu.
+- Carry retained decimal digits through formula references, aggregates and variable assignment. Read adjacent uppercase references such as `2E10` as cell multiplication.
+- Add optional extended worksheet capacity for all 225 cells and local file save and restore. Keep the default capacity and power-key behavior aligned with the first-generation manual.
+
+## 0.4.4 — fx-999CN CW precision and calculation entry, 2026-11-09
+
+- Use 23 significant decimal digits for supported real expressions and carry the additional digits through Ans, scalar variables and eligible registered functions.
+- Apply the manual's scalar input bounds, implicit-divisor grouping and Base-N logic precedence. Preserve decimal display rounding from the retained result.
+- Add inline sexagesimal input, the nine unit conversion categories, both logarithm entry styles and the documented division-by-zero correction workflow.
+
+## 0.4.3 — fx-999CN CW manual workflows, 2026-11-08
+
+- Add model-specific statistics, function table, equation, inequality, ratio, Base-N, matrix and vector screens based on the first-generation manual.
+- Add native-style variable entry, expression templates for calculus and combinatorics, remainder division, history replay and error recovery. Use Gauss–Kronrod quadrature for the 999 integral command.
+- Exercise the documented examples through Electron and preserve the documented lifetimes of table data and array answers.
+
+## 0.4.2 — fx-999CN CW local update, 2026-11-08
+
+- Rework the first-generation 999 chassis and the Distribution and Spreadsheet screens using Casio's product photographs and manual.
+- Add row-by-row distribution entry, spreadsheet reference capture and paste mode, formula recalculation controls, and variable storage from both apps.
+- Add the 999 settings hierarchy, separate reset operations, calculation Verify, manual fraction simplification, and the catalog's multi-statement and variable-store commands.
+
+## 0.4.1 — Local interface update, 2026-11-02
+
+- Introduce a warm neutral workspace, lighter device shadows and a consistent green-accented tool strip.
+- Refine the model library with readable descriptions, restrained surfaces, responsive layouts and reduced-motion-aware hover feedback.
+- Restyle keyboard help to match the workspace while preserving native calculator layouts and model behavior.
+
 ## 0.4.0 — GitHub release candidate
 
 - Prepare the latest local development through 0.13.0 for the next GitHub release after v0.3.0.

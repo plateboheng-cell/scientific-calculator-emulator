@@ -8,14 +8,27 @@ import {rewriteCGMetricExpression} from './cg-metric-expression.js';
 import {CG_CALC_LATEX_DICTIONARY,cgCalcFunctionSpec,cgCalcInfixSpec,cgCalcInfixLatex,resolveCGCalcLatex,prepareCGCalcFunctionDisplay} from '../input/cg-calc-symbols.js';
 import {rewriteCGCalcExpression} from './cg-calc-expression.js';
 import {cgVariableKey} from '../models/cg-variables.js';
+import {CW_STAT_FUNCTIONS,CW_STAT_MACROS,CW_STAT_POSTFIX} from './cw-statistics.js';
+import {prepareCWDegreeLatex} from './cw-notation.js';
+import {CW_UNIT_DICTIONARY,cwUnitCommand} from './cw-units.js';
+import {CW_POSTFIX_DICTIONARY,cwPostfixCommand,cwPostfixExpression} from './cw-operators.js';
 
 export const notationEngine = new ComputeEngine();
 notationEngine.latexSyntax.addEntries(CG_CALC_LATEX_DICTIONARY);
+const cwInfixFunctions={CWVectorDot:'dot',CWPermutation:'nPr',CWCombination:'nCr',CWPolarAngle:'angle',CWRemainder:'CWRemainder'};
+// On CW, juxtaposition precedes permutation, combination and polar input.
+// Explicit multiplication, division and remainder share a left-to-right level.
+const cwPrecedence={CWVectorDot:640,CWPermutation:650,CWCombination:650,CWPolarAngle:650,CWRemainder:390,CWDivision:390};
+notationEngine.latexSyntax.addEntries(Object.entries(cwPrecedence).map(([name,precedence])=>({kind:'infix',name,latexTrigger:'\\'+name,precedence,associativity:'left'})));
+notationEngine.latexSyntax.addEntries(CW_UNIT_DICTIONARY);
+notationEngine.latexSyntax.addEntries(CW_POSTFIX_DICTIONARY);
 const functionNames={Sin:'sin',Cos:'cos',Tan:'tan',Arcsin:'asin',Arccos:'acos',Arctan:'atan',Sinh:'sinh',Cosh:'cosh',Tanh:'tanh',Arsinh:'asinh',Arcosh:'acosh',Artanh:'atanh',Ln:'ln',Log:'log',Lg:'log',Lb:'log2',Exp:'exp',Sqrt:'sqrt',Abs:'abs',Floor:'Intg',Ceil:'ceil',Round:'Rnd',Factorial:'factorial',GCD:'gcd',LCM:'lcm',Conjugate:'conj',Re:'re',Im:'im',Argument:'arg',Determinant:'det',Transpose:'transpose',Inverse:'inv',Norm:'norm'};
 const knownFunctions=new Set(['sin','cos','tan','asin','acos','atan','sinh','cosh','tanh','asinh','acosh','atanh','log','ln','exp','sqrt','nthRoot','abs','nCr','nPr','gcd','lcm','Int','Intg','Rnd','Ran','RanInt','Pol','Rec','angle','arg','conj','re','im','det','inv','transpose','rref','identity','dot','cross','norm','angleBetween','unitVector','dms','deg','rad','gra','f','g']);
 const constantNames={Pi:'pi',ExponentialE:'e',ImaginaryUnit:'i',Half:'(1/2)'};
 function nativeVariableScope(node,context){const symbol=typeof node==='string'?node:node?.sym;if(typeof symbol!=='string')return null;const key=cgVariableKey(constantNames[symbol]||symbol);return key?{key,context:{...context,variable:undefined,aliases:{...context.aliases,[symbol]:key}}}:null;}
 for(const name of CG_FINANCIAL_FUNCTION_NAMES)knownFunctions.add(name);
+for(const name of CW_STAT_FUNCTIONS)knownFunctions.add(name);
+knownFunctions.add('CWLog');
 for(const name of [...CG_STATISTICAL_FUNCTION_NAMES,'ListToMat','MatToList','Med','Det','Trn','Identity','Ref','Rref','Abs','Arg','Conjg','ReP','ImP','DotP','CrossP','Angle','UnitV','Norm'])knownFunctions.add(name);
 const cgMemoryReference=name=>/^(?:fn|[xyr]|[xy]t)(?:[1-9]|1\d|20)$/i.test(name);
 for(const prefix of ['fn','FN','x','X','y','Y','r','R','xt','Xt','XT','yt','Yt','YT'])for(let number=1;number<=20;number++)knownFunctions.add(prefix+number);
@@ -40,8 +53,8 @@ export function mathJSONToExpression(node,context={}) {
     if(node==='Nothing'||node==='Missing'||node.startsWith("'"))throw new CalcError('请填写公式空位');
     if(context.variable&&node===context.variable)return 'x';
     if(/^[A-Z]_bold$/.test(node))return `Mat${node[0]}`;
-    if(context.mode==='matrix'&&/^[ABCD]$/.test(node))return `Mat${node}`;
-    if(context.mode==='vector'&&/^[ABCD]$/.test(node))return `Vct${node}`;
+    if(!context.cwNative&&context.mode==='matrix'&&/^[ABCD]$/.test(node))return `Mat${node}`;
+    if(!context.cwNative&&context.mode==='vector'&&/^[ABCD]$/.test(node))return `Vct${node}`;
     if(!/^[A-Za-z][A-Za-z0-9]*$/.test(node))throw new CalcError('不支持的数学符号');
     return node;
   }
@@ -53,12 +66,22 @@ export function mathJSONToExpression(node,context={}) {
   if(head==='Set')return '['+args.map(read).join(',')+']';
   if(head==='At'){const target=read(args[0]);if(!/^(?:List(?:[1-9]|1\d|2[0-6]|Ans)|(?:Mat|Vct)(?:[A-Z]|Ans))$/.test(target)||args.length<2||args.length>3)throw new CalcError('不支持的数组下标');return target+'['+args.slice(1).map(read).join(',')+']';}
   if(head==='To')return read(args[0])+'→'+read(args[1]);
+  const unit=context.cwNative?cwUnitCommand(head):null;
+  const postfix=context.cwNative?cwPostfixCommand(head):null;
+  if(postfix)return cwPostfixExpression(postfix,read(args[0]));
+  if(unit)return `CWConvertUnits(${read(args[0])},${JSON.stringify(unit.from)},${JSON.stringify(unit.to)})`;
+  if(context.cwNative&&head==='CWDivision')return group(args[0])+'/'+group(args[1]);
+  if(context.cwNative&&Object.hasOwn(cwInfixFunctions,head))return `${cwInfixFunctions[head]}(${args.map(read).join(',')})`;
   const infix=cgCalcInfixSpec(head);if(infix){if(args.length!==2)throw new CalcError('Syntax ERROR');return group(args[0])+infix.canonical+group(args[1]);}
   const nativeCall=(spec,values)=>{if(spec.parserName==='Seq'){if(values.length<4||values.length>5)throw new CalcError('Seq 参数不足');return 'Seq('+JSON.stringify(read(values[0]))+','+JSON.stringify(read(values[1]))+','+values.slice(2).map(read).join(',')+')';}const scoped=spec.parserName==='Sigma'||spec.parserName==='SolveN'&&[2,4].includes(values.length)?nativeVariableScope(values[1],context):null;return spec.parserName+'('+values.map((value,index)=>scoped&&index===0?mathJSONToExpression(value,scoped.context):scoped&&index===1?scoped.key:read(value)).join(',')+')';};
   if(cgCalcFunctionSpec(head))return nativeCall(cgCalcFunctionSpec(head),args);
   if(cgNativeFunctionSpec(head))return nativeCall(cgNativeFunctionSpec(head),args);
   if(head==='Delimiter'||head==='Style')return read(args[0]);
   if(head==='InvisibleOperator'){
+    if(context.cwNative&&args.length>=2&&CW_STAT_POSTFIX.has(args.at(-1))){
+      const operand=args.length===2?args[0]:['InvisibleOperator',...args.slice(0,-1)];
+      return args.at(-1)+'('+read(operand)+')';
+    }
     if(args.some(arg=>typeof arg==='string'&&cgMetricSymbolSource(arg)!==null)){let value='';for(const arg of args){const metric=typeof arg==='string'?cgMetricSymbolSource(arg):null;value+=metric!==null?' '+metric:(value?'*':'')+group(arg);}return value.trim();}
     if(typeof args[0]==='string'&&cgNativeFunctionSpec(args[0])&&args[1]?.[0]==='Delimiter')return nativeCall(cgNativeFunctionSpec(args[0]),callArguments(args[1][1]));
     if(typeof args[0]==='string'&&cgCalcFunctionSpec(args[0])&&args[1]?.[0]==='Delimiter')return nativeCall(cgCalcFunctionSpec(args[0]),callArguments(args[1][1]));
@@ -80,6 +103,10 @@ export function mathJSONToExpression(node,context={}) {
   }
   if(head==='Root')return `nthRoot(${read(args[0])},${read(args[1])})`;
   if(head==='Square')return `${group(args[0])}^2`;
+  if(context.cwNative){
+    const infix={Equal:'=',NotEqual:'≠',Less:'<',Greater:'>',LessEqual:'≤',GreaterEqual:'≥',Colon:':'}[head];
+    if(typeof infix==='string')return args.map(read).join(infix);
+  }
   if(head==='Equal')return args.map(read).join('=');
   if(head==='Percent')return `${group(args[0])}/100`;
   if(head==='OverVector'&&context.aliases?.[args[0]])return context.aliases[args[0]];
@@ -101,7 +128,7 @@ export function mathJSONToExpression(node,context={}) {
   if(head==='Lb')return `log(${read(args[0])},2)`;
   if(head==='Choose'||head==='Binomial')return `nCr(${args.map(read).join(',')})`;
   if(head==='Mod')return `mod(${args.map(read).join(',')})`;
-  if(head==='Abs'&&context.mode==='matrix')return `det(${read(args[0])})`;
+  if(head==='Abs'&&context.mode==='matrix'&&!context.cwNative)return `det(${read(args[0])})`;
   if(head==='Abs'&&context.mode==='vector')return `norm(${read(args[0])})`;
   if(functionNames[head])return `${functionNames[head]}(${args.map(read).join(',')})`;
   if(knownFunctions.has(head))return `${head}(${args.map(read).join(',')})`;
@@ -114,6 +141,14 @@ export function latexToExpression(latex,context={}){
   const simp=simpCommand(latex);if(simp){if(simpCommand(latex.slice(simp.index+simp.length)))throw new CalcError('Syntax ERROR');const base=latexToExpression(latex.slice(0,simp.index),context),tail=latex.slice(simp.index+simp.length).trim();if(!base)throw new CalcError('请填写公式空位');return base+' Simp'+(tail?' '+latexToExpression(tail,context):'');}
   const metric=cgMetricLatexToExpression(latex,resolved=>latexToExpression(resolved,context));if(metric!==null)return metric;
   latex=combineCGArrayPrefixes(resolveCGCalcLatex(resolveCGNativeLatex(latex)));
+  if(context.cwNative){
+    latex=prepareCWDegreeLatex(latex).replace(/\\div(?![A-Za-z])/g,'\\CWDivision ');
+    if(context.mode==='complex')latex=latex.replace(/\\angle(?![A-Za-z])|∠/g,'\\CWPolarAngle ');
+  }
+  if(context.cwNative)latex=latex.replace(/\\(CWStat[A-Za-z0-9]+|CWLog|CWRandom)(?![A-Za-z0-9])/g,(token,name)=>{
+    if(name==='CWRandom')return '\\operatorname{Ran}\\left(\\right)';
+    return name==='CWLog'||Object.hasOwn(CW_STAT_MACROS,name)?`\\operatorname{${name}}`:token;
+  });
   if(!latex.trim())return '';
   if(latex.length>3000)throw new CalcError('算式过长');
   const nativeTokens=[...CG_FINANCIAL_FUNCTIONS,...CG_STATISTICAL_FUNCTIONS,...CG_FINANCIAL_VARIABLES];

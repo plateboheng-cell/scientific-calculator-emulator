@@ -41,7 +41,7 @@ The EX is selectable and Experimental, with independent limits, English legends 
 
 ### fx-999CN CW — Experimental
 
-第一代 999 参考白色款正面照片及第一代共用手册，继承 CW 的共享计算和 48 键物理位置，提供十二项 HOME。实际新增七种分布计算（离散列表 45 行、标量近似 Ans），以及 A1:E45 数据表格（常数/公式、相对与绝对引用、范围聚合、填充、复制/剪切、容量限制和重算）。数据表格在当前会话跨应用保留，ON/关机/重启/切换型号清空；不持久化。输入域、容量模拟和原机流程差异见 [999CW.md](999CW.md)。991CN CW 仍保留十项，不提供这两个应用。未完成原机全部目录/工具、自动计算关闭、数据抓取、点阵像素及逐位数值验证，不提升为完整支持。
+第一代 999 提供白色外壳、48 键布局、十二项点阵 HOME 和固定位置的 LCD 指示符。统计、函数表格、方程、不等式、比例式、基数、矩阵、向量和 999 专用应用均可走手册的主要流程。支持的实数及复数算式、Ans 和标量变量保留 23 位有效数字，复数的两个分量分别保存。完整字库、目录和部分固件边界待对照。[999 型号范围与限制](999CW.md)
 
 The first-generation 999 profile adds working distributions and a spreadsheet, rather than a renamed 991 UI. It remains Experimental; consult the dedicated scope and numerical-limit document.
 

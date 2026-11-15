@@ -1,0 +1,27 @@
+/* Application chrome; native device geometry and colors stay in model styles. */
+:root{--workspace-canvas:#ecefe7;--workspace-surface:#fcfdf9;--workspace-ink:#283e31;--workspace-muted:#5e7063;--workspace-accent:#28634c;--workspace-line:#cdd7cb}
+body{background:radial-gradient(ellipse at 50% 32%,#fafbf6 0%,var(--workspace-canvas) 72%)}
+/* Preserve each molded inset; only the shadow cast onto the workspace changes. */
+#app .calculator{box-shadow:inset 0 0 0 3px #222427,0 10px 24px #243b2d26}
+#app .calculator.model-x,#app .calculator.model-ex{box-shadow:inset 0 0 0 2px #555b57,inset 0 -8px 5px #131614,0 10px 24px #243b2d26}
+#app .calculator.model-cw{box-shadow:inset 0 0 0 4px #111,0 10px 24px #243b2d26}
+#app .calculator.white-cw{box-shadow:inset 0 0 0 3px #d6d8d3,0 10px 24px #243b2d26}
+#app .calculator.model-cg,#app .calculator.model-ti{box-shadow:inset 0 0 0 3px #11191e,0 10px 24px #243b2d26}
+#app .calculator .foot{position:absolute;left:-2px;right:-2px;bottom:-39px;display:flex;align-items:center;justify-content:space-between;gap:2px;min-height:31px;margin:0;padding:3px;border:1px solid #d2dacf;border-radius:10px;background:var(--workspace-surface);box-shadow:0 2px 6px #273b2c0a;letter-spacing:0;white-space:nowrap}
+#app .calculator .foot button{flex:0 1 auto;min-width:0;padding:5px 6px;margin:0;border:0;border-radius:6px;background:transparent;color:var(--workspace-muted);font:10px/1.4 'Segoe UI','Microsoft YaHei',sans-serif;transition:background 140ms ease,color 140ms ease}
+#app .calculator .foot button[data-action="models"]{background:#e8eee2;color:#315d42;font-weight:600}
+#app .calculator .foot button:hover{background:#dde8d7;color:#234e36}
+#app .calculator .foot button:active{background:#d1dfca}
+#app .calculator .foot button:focus-visible{outline:2px solid var(--workspace-accent);outline-offset:1px}
+#help{width:min(560px,calc(100vw - 28px));max-height:calc(100dvh - 28px);padding:24px;border:1px solid #fff;border-radius:16px;background:var(--workspace-surface);color:var(--workspace-ink);box-shadow:0 20px 70px #203a3026;scrollbar-width:thin;scrollbar-color:#bcc9b8 var(--workspace-surface);color-scheme:light}
+#help::backdrop{background:#263b3359;backdrop-filter:blur(8px)}
+#help h2{padding-right:88px;font-size:21px;font-weight:650;line-height:1.4;margin-bottom:20px}
+#help h3{margin:24px 0 8px;color:var(--workspace-accent);font-size:14px}
+#help p{color:#526657;font-size:12px;line-height:1.85}
+#help td{padding:10px 6px;border-bottom:1px solid #e2e7dc;font-size:12px;line-height:1.65}
+#help td:first-child{width:36%;padding-left:0}
+#help kbd{display:inline-block;background:#edf1e7;color:#3e5945;border:1px solid #d7dfd1;border-bottom-width:2px;border-radius:5px;padding:2px 6px;font:11px/1.5 'Segoe UI','Microsoft YaHei',sans-serif}
+#help button{padding:7px 11px;background:#e8eee2;color:#315d42;border-radius:7px;font:12px/1.5 'Segoe UI','Microsoft YaHei',sans-serif}
+#help button:hover{background:#dce7d5}
+#help button:focus-visible{outline:2px solid var(--workspace-accent);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){#app .calculator .foot button{transition:none}}

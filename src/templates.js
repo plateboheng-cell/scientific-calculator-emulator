@@ -2,6 +2,7 @@
 const slot=(name,extra='')=>`<span class="math-slot ${extra}" data-slot="${name}"></span>`;
 export function formulaLayout(layout,fields){
   const kind=typeof layout==='string'?layout:layout?.kind;
+  if(kind==='cw-entry')return `<div class="cw-math-editor">${slot(layout.name)}</div>`;
   if(kind==='integral'||kind==='sigma'||kind==='product')return `<div class="natural-expression"><span class="bounded-operator"><span class="upper-limit">${slot('b')}</span><span class="large-operator">${kind==='integral'?'∫':kind==='sigma'?'∑':'∏'}</span><span class="lower-limit">${kind==='integral'?'':'<i>x</i>='}${slot('a')}</span></span>${slot('expr','body-slot')}${kind==='integral'?'<span class="differential">d<i>x</i></span>':''}</div>`;
   if(kind==='derivative')return `<div class="natural-expression"><span class="derivative-operator"><span>d</span><span>d<i>x</i></span></span><span class="function-parenthesis">(</span>${slot('expr','body-slot')}<span class="function-parenthesis">)</span><span class="evaluation-point"><span class="evaluation-bar">│</span><span class="point-subscript"><i>x</i>=${slot('x')}</span></span></div>`;
   if(kind==='polynomial')return `<div class="polynomial-expression">${fields.filter(f=>f.name!=='op').map((f,i,a)=>`${i?'<span>+</span>':''}${slot(f.name)}${a.length-i-1>0?`<span><i>x</i>${a.length-i-1>1?`<sup>${a.length-i-1}</sup>`:''}</span>`:''}`).join('')}${layout.inequality?slot('op'):'<span>=</span>'}<span>0</span></div>`;
