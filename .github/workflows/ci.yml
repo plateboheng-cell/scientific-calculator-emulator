@@ -114,9 +114,11 @@ jobs:
       - name: Archive and checksum build artifacts
         run: |
           Compress-Archive -Path 'release/win-unpacked/*' -DestinationPath 'release/scientific-calculator-simulator-Windows-x64.zip'
-          Get-ChildItem release -File | Where-Object Extension -In '.exe','.zip' | ForEach-Object {
+          $checksums = Get-ChildItem release -File | Where-Object Extension -In '.exe','.zip' | ForEach-Object {
             '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
-          } | Set-Content release/SHA256SUMS.txt
+          }
+          $lf = [char]10
+          [IO.File]::WriteAllText((Join-Path $PWD.Path 'release/SHA256SUMS.txt'), ($checksums -join $lf) + $lf)
       - name: Windows result summary
         if: always()
         env:
